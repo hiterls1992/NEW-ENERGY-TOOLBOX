@@ -236,9 +236,11 @@ function esc(s){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
   });
 }
-/* 过滤优先级：搜索关键字（仅点击"搜索"后生效）；返回命中行原始索引数组 */
+/* 过滤条件：型号下拉（选中后表格只保留该型号）+ 搜索关键字（仅点击"搜索"后生效）；
+ * 两者互斥（选型号清空搜索、搜索清空型号），返回命中行原始索引数组 */
 function renderTable(){
   var kw = appliedKw.trim().toLowerCase();
+  var model = $("modelSel").value;
   var head = curLabels.map(function(lab){
     var nm = splitUnit(lab);
     return nm[1] ? esc(nm[0]) + '<br>(' + esc(nm[1]) + ')' : esc(nm[0]);
@@ -246,6 +248,7 @@ function renderTable(){
   $("tableHead").innerHTML = "<th>" + head + "</th>";
   var frag = "", matched = [];
   curRows.forEach(function(r, i){
+    if (model && String(r[0]) !== model) return;
     var searchable = String(r[0]);
     if (kw && searchable.toLowerCase().indexOf(kw) < 0) return;
     matched.push(i);
@@ -295,11 +298,12 @@ $("typeSel").addEventListener("change", function(){
   if (curType) renderTable(); else { $("tableHead").innerHTML = ""; $("tableBody").innerHTML = ""; $("tableCount").textContent = ""; }
 });
 
-/* 选型号：填充规格下拉；组内唯一行直接出结果，多行时选第一行 */
+/* 选型号：表格只保留该型号数据；组内唯一行直接出结果，多行时选第一行 */
 $("modelSel").addEventListener("change", function(){
   clearSearch();
   var model = this.value;
-  if (!model){ resetResult(); renderTable(); return; }
+  renderTable();
+  if (!model){ resetResult(); return; }
   var rows = fillSpecs(curType, model);
   if (rows.length > 1) $("specSel").value = "0";
   showRow(rows[Number($("specSel").value || 0)]);
