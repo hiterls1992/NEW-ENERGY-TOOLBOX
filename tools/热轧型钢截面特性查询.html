@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>热轧型钢截面特性查询</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/热轧型钢截面特性查询.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/热轧型钢截面特性查询.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== 页头横幅 ===== -->
+  <header>
+    <h1>热轧型钢截面特性查询</h1>
+    <p class="sub">GB/T 706-2016《热轧型钢》+ GB/T 11263-2024《热轧H型钢和剖分T型钢》· 工字钢 / 槽钢 / 角钢 / H型钢 / HK型钢 / 剖分T型钢 · 共 <b id="totalCnt">—</b> 个规格</p>
+  </header>
+
+  <!-- ===== ① 查询条件 ===== -->
+  <div class="panel">
+    <div class="panel-title">① 查询条件（类别 → 型号 → 规格级联选择）</div>
+    <div class="panel-body">
+      <div class="cond-row">
+        <div class="cond-item">
+          <label for="typeSel">型钢类别</label>
+          <select id="typeSel"></select>
+        </div>
+        <div class="cond-item">
+          <label for="modelSel">型号</label>
+          <select id="modelSel"><option value="">— 请选择型号 —</option></select>
+        </div>
+        <div class="cond-item hidden" id="specItem">
+          <label for="specSel">截面规格（同一型号不同厚度）</label>
+          <select id="specSel"></select>
+        </div>
+      </div>
+      <div class="search-row">
+        <input type="text" id="searchBox" placeholder="输入型号关键字（如 200、L63x6、H400），点击搜索过滤下方全部数据" spellcheck="false">
+        <button class="btn btn-primary" id="btnSearch">搜索</button>
+        <button class="btn btn-ghost" id="btnReset">清除筛选</button>
+      </div>
+      <div class="msg" id="condMsg"></div>
+    </div>
+  </div>
+
+  <!-- ===== ② 全部数据浏览 ===== -->
+  <div class="panel">
+    <div class="panel-title">② 全部数据浏览 <span class="pt-sub" id="tableCount"></span></div>
+    <div class="panel-body">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead><tr id="tableHead"></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ③ 查询结果 ===== -->
+  <div class="panel" id="resultPanel">
+    <div class="panel-title">③ 查询结果 <span class="pt-sub" id="resultTitle">—</span></div>
+    <div class="panel-body" id="resultBody">
+      <div class="msg" id="emptyMsg">请在上方选择型号，或点击数据表中的行查看截面特性。</div>
+      <div id="resultBlocks" class="hidden"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnCopy">复制查询结果</button>
+      </div>
+      <div class="msg" id="copyMsg"></div>
+    </div>
+  </div>
+
+  <!-- ===== 说明 ===== -->
+  <div class="panel">
+    <div class="panel-title">数据说明</div>
+    <div class="panel-body">
+      <div class="tip" style="margin-top:0;">
+        <b>说明：</b>本工具收录 7 类热轧型钢的截面尺寸与截面特性（A 截面面积、I 惯性矩、i 回转半径、W 截面模量、外表面积、重心距离等），数据取自标准表列全文，未做任何改写与插值。<br>
+        <b>标准依据：</b>工字钢、槽钢、等边角钢、不等边角钢 — GB/T 706-2016《热轧型钢》；H型钢（附录A）、HK型钢（附录B）、剖分T型钢（附录C）— GB/T 11263-2024《热轧H型钢和剖分T型钢》。<br>
+        <b>基准规格：</b>H型钢 / HK型钢 / 剖分T型钢 中标注"是"的为标准推荐基准规格（表中原"△"标记）。<br>
+        <b>外表面积：</b>单位长度表面积（m²/m），用于涂装、防火层等工程量估算。<br>
+        <b>缺失值：</b>表中"—"表示标准未给出该值。<br>
+        <b>数据来源：</b>本地数据文件 data/热轧型钢截面特性-data.js（由 data/ 下 7 个标准数据 CSV 生成）。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../data/热轧型钢截面特性-data.js"></script>
+<script>
+(function(){
+"use strict";
+
+var $ = function(id){ return document.getElementById(id); };
+var DATA = (typeof HOT_ROLLED_STEEL !== "undefined") ? HOT_ROLLED_STEEL : {};
+
+/* 各类别标准依据（用于结果标题与复制输出） */
+var STD = {
+  "工字钢":     "GB/T 706-2016",
+  "槽钢":       "GB/T 706-2016",
+  "等边角钢":   "GB/T 706-2016",
+  "不等边角钢": "GB/T 706-2016",
+  "H型钢":      "GB/T 11263-2024 附录A",
+  "HK型钢":     "GB/T 11263-2024 附录B",
+  "剖分T型钢":  "GB/T 11263-2024 附录C"
+};
+
+/* 列分类：按列名归类到结果面板各分组（避免按索引硬编码）
+ * name=型号(不进结果卡) dim=截面尺寸 sec=截面参数 inertia=惯性矩 rot=回转半径 mod=截面模量 extra=其他 */
+function classify(label){
+  if (label === "型号") return "name";
+  if (/^惯性矩/.test(label)) return "inertia";
+  if (/^回转半径/.test(label)) return "rot";
+  if (/^截面模量/.test(label)) return "mod";
+  if (/^截面面积|^理论重量|^外表面积/.test(label)) return "sec";
+  if (/\(mm\)$/.test(label)) return "dim";
+  return "extra";
+}
+/* 拆分展示名与单位："截面面积 A (cm²)" -> ["截面面积 A", "cm²"] */
+function splitUnit(label){
+  var m = label.match(/^(.*?)\s*\((.*)\)$/);
+  return m ? [m[1], m[2]] : [label, ""];
+}
+
+/* 结果面板分组顺序与标题 */
+var GROUPS = [
+  ["dim",     "截面尺寸 (mm)"],
+  ["sec",     "截面参数"],
+  ["inertia", "惯性矩 (cm⁴)"],
+  ["rot",     "回转半径 (cm)"],
+  ["mod",     "截面模量 (cm³)"],
+  ["extra",   "其他参数"]
+];
+
+var curType = "";      // 当前类别
+var curRows = [];      // 当前类别数据行引用
+var curLabels = [];    // 当前类别列名
+var appliedKw = "";    // 已应用的搜索关键字（点击"搜索"后生效）
+var CURRENT = null;    // 当前选中行
+
+/* ==================== 级联下拉 ==================== */
+function fillTypes(){
+  var sel = $("typeSel");
+  sel.innerHTML = '<option value="">— 请选择类别 —</option>' +
+    Object.keys(DATA).map(function(k){ return '<option value="' + k + '">' + k + '</option>'; }).join("");
+}
+/* 型号下拉：按列 0 分组（保持数据文件原始顺序），同型号多行归为一组 */
+function fillModels(type){
+  var sel = $("modelSel");
+  sel.innerHTML = '<option value="">— 请选择型号 —</option>';
+  $("specItem").classList.add("hidden");
+  $("specSel").innerHTML = "";
+  if (!type) return;
+  var seen = {};
+  curRows.forEach(function(r){
+    var model = String(r[0]);
+    if (seen[model]) return;
+    seen[model] = true;
+    var opt = document.createElement("option");
+    opt.value = model;
+    opt.textContent = model;
+    sel.appendChild(opt);
+  });
+}
+/* 规格下拉：同一型号下所有行，标签 = 尺寸列值用 × 连接 */
+function fillSpecs(type, model){
+  var sel = $("specSel");
+  sel.innerHTML = "";
+  var rows = curRows.filter(function(r){ return String(r[0]) === model; });
+  var dimIdx = [];
+  curLabels.forEach(function(lab, i){ if (classify(lab) === "dim") dimIdx.push(i); });
+  rows.forEach(function(r, i){
+    var tag = dimIdx.map(function(j){ return r[j] === "" ? "—" : r[j]; }).join("×");
+    if (!tag || tag === "—") tag = "规格 " + (i + 1);
+    var opt = document.createElement("option");
+    opt.value = i;                 // 组内序号
+    opt.textContent = tag;
+    sel.appendChild(opt);
+  });
+  /* 组内仅 1 行时隐藏规格下拉 */
+  var multi = rows.length > 1;
+  $("specItem").classList.toggle("hidden", !multi);
+  return rows;
+}
+
+/* ==================== 结果渲染 ==================== */
+function fmt(v){ return (v === "" || v === undefined || v === null) ? "—" : v; }
+
+function resetResult(){
+  CURRENT = null;
+  $("resultTitle").textContent = "—";
+  $("emptyMsg").classList.remove("hidden");
+  $("resultBlocks").classList.add("hidden");
+  $("resultBlocks").innerHTML = "";
+}
+
+function showRow(row){
+  CURRENT = row;
+  $("resultTitle").textContent = curType + " · " + row[0];
+  var blocks = "";
+  GROUPS.forEach(function(g){
+    var items = "";
+    curLabels.forEach(function(lab, i){
+      if (classify(lab) !== g[0]) return;
+      var nm = splitUnit(lab);
+      var v = fmt(row[i]);
+      var note = nm[1];
+      /* 基准规格 / 对应H型钢系列 给出辅助说明 */
+      if (lab === "基准规格" && v === "是") note = "△ 标准推荐规格";
+      items += '<div class="kv-card">' +
+        '<div class="kv-lab">' + esc(nm[0]) + '</div>' +
+        '<div class="kv-val">' + esc(String(v)) + '</div>' +
+        (note ? '<div class="kv-note">' + esc(note) + '</div>' : '') +
+        '</div>';
+    });
+    if (!items) return;
+    blocks += '<div class="kv-block"><div class="kv-head">' + g[1] + '</div>' +
+      '<div class="kv-grid">' + items + '</div></div>';
+  });
+  $("emptyMsg").classList.add("hidden");
+  $("resultBlocks").innerHTML = blocks;
+  $("resultBlocks").classList.remove("hidden");
+}
+
+/* ==================== 全表渲染与过滤 ==================== */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+/* 过滤优先级：搜索关键字（仅点击"搜索"后生效）；返回命中行原始索引数组 */
+function renderTable(){
+  var kw = appliedKw.trim().toLowerCase();
+  var head = curLabels.map(function(lab){
+    var nm = splitUnit(lab);
+    return nm[1] ? esc(nm[0]) + '<br>(' + esc(nm[1]) + ')' : esc(nm[0]);
+  }).join("</th><th>");
+  $("tableHead").innerHTML = "<th>" + head + "</th>";
+  var frag = "", matched = [];
+  curRows.forEach(function(r, i){
+    var searchable = String(r[0]);
+    if (kw && searchable.toLowerCase().indexOf(kw) < 0) return;
+    matched.push(i);
+    frag += '<tr data-i="' + i + '">' +
+      r.map(function(v){ return "<td>" + esc(fmt(v)) + "</td>"; }).join("") +
+      "</tr>";
+  });
+  $("tableBody").innerHTML = frag;
+  $("tableCount").textContent = "共 " + matched.length + " / " + curRows.length + " 条";
+  return matched;
+}
+function markTableRow(i){
+  var trs = $("tableBody").querySelectorAll("tr");
+  trs.forEach(function(tr){ tr.classList.toggle("row-hl", Number(tr.dataset.i) === i); });
+}
+
+/* ==================== 消息 ==================== */
+function setCondMsg(txt, type){
+  var el = $("condMsg");
+  el.className = "msg " + type + " show";
+  el.textContent = txt;
+}
+var msgTimer = null;
+function flashMsg(txt, type){
+  var el = $("copyMsg");
+  el.className = "msg " + type + " show";
+  el.textContent = txt;
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(function(){ el.className = "msg"; }, 2500);
+}
+
+/* ==================== 事件 ==================== */
+/* 清空搜索框与已应用关键字 */
+function clearSearch(){
+  $("searchBox").value = "";
+  appliedKw = "";
+}
+
+/* 选类别：型号下拉重置、结果清空、数据表刷新 */
+$("typeSel").addEventListener("change", function(){
+  clearSearch();
+  curType = this.value;
+  curRows = curType ? DATA[curType].rows : [];
+  curLabels = curType ? DATA[curType].labels : [];
+  fillModels(curType);
+  resetResult();
+  if (curType) renderTable(); else { $("tableHead").innerHTML = ""; $("tableBody").innerHTML = ""; $("tableCount").textContent = ""; }
+});
+
+/* 选型号：填充规格下拉；组内唯一行直接出结果，多行时选第一行 */
+$("modelSel").addEventListener("change", function(){
+  clearSearch();
+  var model = this.value;
+  if (!model){ resetResult(); renderTable(); return; }
+  var rows = fillSpecs(curType, model);
+  if (rows.length > 1) $("specSel").value = "0";
+  showRow(rows[Number($("specSel").value || 0)]);
+  markTableRow(curRows.indexOf(rows[Number($("specSel").value || 0)]));
+});
+
+/* 选规格：更新结果 */
+$("specSel").addEventListener("change", function(){
+  var model = $("modelSel").value;
+  var rows = curRows.filter(function(r){ return String(r[0]) === model; });
+  var row = rows[Number(this.value)];
+  if (row){ showRow(row); markTableRow(curRows.indexOf(row)); }
+});
+
+/* 搜索：清空级联选择，按关键字全量过滤；唯一命中时自动填充查询结果 */
+$("btnSearch").addEventListener("click", function(){
+  appliedKw = $("searchBox").value.trim();
+  $("modelSel").value = "";
+  $("specItem").classList.add("hidden");
+  var matched = renderTable();
+  if (matched.length === 1){
+    showRow(curRows[matched[0]]);
+    markTableRow(matched[0]);
+    /* 反向联动：同步级联下拉 */
+    var row = curRows[matched[0]];
+    $("modelSel").value = String(row[0]);
+    fillSpecs(curType, String(row[0]));
+    setCondMsg("匹配 1 条，查询结果已更新", "ok");
+  } else if (matched.length === 0){
+    resetResult();
+    setCondMsg("未找到匹配数据", "warn");
+  } else {
+    resetResult();
+    setCondMsg("匹配 " + matched.length + " 条，点击表格行可查看单条详情", "ok");
+  }
+});
+$("searchBox").addEventListener("keydown", function(e){
+  if (e.key === "Enter") $("btnSearch").click();
+});
+
+/* 清除筛选：全部恢复 */
+$("btnReset").addEventListener("click", function(){
+  clearSearch();
+  $("modelSel").value = "";
+  $("specSel").innerHTML = "";
+  $("specItem").classList.add("hidden");
+  resetResult();
+  renderTable();
+});
+
+/* 复制查询结果 */
+$("btnCopy").addEventListener("click", function(){
+  if (!CURRENT){ flashMsg("请先选择型号", "warn"); return; }
+  var r = CURRENT;
+  var line = curType + " " + r[0] + "（" + STD[curType] + "）";
+  curLabels.forEach(function(lab, i){
+    if (classify(lab) === "name") return;
+    line += "｜" + lab + " " + fmt(r[i]);
+  });
+  var done = function(){ flashMsg("✓ 已复制到剪贴板", "ok"); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(line).then(done, function(){ fallbackCopy(line, done); });
+  } else { fallbackCopy(line, done); }
+});
+function fallbackCopy(text, done){
+  var ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+/* 点击表格行 → 选中查询 */
+$("tableBody").addEventListener("click", function(e){
+  var tr = e.target.closest("tr");
+  if (!tr || tr.dataset.i === undefined) return;
+  var i = Number(tr.dataset.i);
+  showRow(curRows[i]);
+  /* 反向联动：同步级联下拉 */
+  var model = String(curRows[i][0]);
+  $("modelSel").value = model;
+  fillSpecs(curType, model);
+  var rows = curRows.filter(function(r){ return String(r[0]) === model; });
+  var gi = rows.indexOf(curRows[i]);
+  if (gi >= 0) $("specSel").value = String(gi);
+  markTableRow(i);
+});
+
+/* ==================== 初始化 ==================== */
+fillTypes();
+(function(){
+  var total = 0;
+  Object.keys(DATA).forEach(function(k){ total += DATA[k].rows.length; });
+  $("totalCnt").textContent = total;
+})();
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "切换到暗色主题" : "切换到浅色主题";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/热轧型钢截面特性查询.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>
