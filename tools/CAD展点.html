@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="sE0QsO1QvMAkOgxCHIIV4e">
+<head data-page-node-id="2EMKL5kUiYWAp96EiT2zh9">
+<meta charset="UTF-8" data-page-node-id="H5MueXCThD8mbpCM9Rb6lU">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="mzVTAEuWmmE9AmTDXGipg3">
+<title>CAD展点（CGCS2000 坐标自动识别）</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/CAD展点.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/CAD展点.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-page-node-id="MqgGsI6H5cvj717WDP1JnK">
+<div class="wrap" data-page-node-id="crzj1D2xUheEsRrLlAeQBa">
+  <h1 data-page-node-id="xqThWMli3POsWEIk3uZgNT">CAD展点（CGCS2000 坐标自动识别）</h1>
+  <div class="subtitle" data-page-node-id="Ul57me1dZCfy5kS87rlYbg">
+    测量坐标 → CAD 坐标自动颠倒换算：CAD 的 X = 东坐标（测量Y）、CAD 的 Y = 北坐标（测量X）。
+    支持从 Excel / Word 表格直接复制粘贴（每行：桩名 东坐标Y 北坐标X 高程，顺序可自动识别）。
+  </div>
+
+  <div class="main">
+  <div class="left">
+  <!-- ============ ① 批量输入 ============ -->
+  <div class="panel" data-page-node-id="qWBeSP0cczQhJQUCWBIAEJ">
+    <div class="panel-title" data-page-node-id="ZTWNBhgpTSeQZr9N0UnaEw">① 批量输入点坐标（可直接从 Excel/Word 表格粘贴）</div>
+    <div class="panel-body" data-page-node-id="050Nba39JzdxP9QSQK3WiG">
+      <textarea id="inputArea" placeholder="每行一个点，字段间用空格 / Tab / 逗号分隔均可：
+WQ1  592981.81  4150469.22  1379.72   ← 带高程
+WQ2  593026.59  4150213.62            ← 无高程，只绘平面点和编号
+
+说明：
+· 第一列可为桩名（可选），其后依次为两个坐标 + 高程（高程可选）；
+· 程序按坐标整数位数自动识别东/北坐标（7位=北坐标X，6位或≥8位含带号=东坐标Y），也可在下方手动指定顺序；
+· 含"桩名/坐标/高程"等文字的表头行会自动跳过。"></textarea>
+      <div class="row-btns" data-page-node-id="wbRnDAM6EGgOOjD0mJctCG">
+        <button class="btn btn-primary" id="btnParse" data-page-node-id="NHHSQ8Q19MvQ846thn4WZs">解析坐标</button>
+        <button class="btn btn-gray" id="btnSample" data-page-node-id="gTK0r4hNum4ybCI1uBWJYn">填入示例数据</button>
+        <button class="btn btn-gray" id="btnClear" data-page-node-id="CjOYzyzKEsmYFaQFV3YsY0">清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ② 绘制选项 ============ -->
+  <div class="panel" data-page-node-id="Mo813EojQ1GxyXYTzaMseK">
+    <div class="panel-title" data-page-node-id="RCB9VhUwvZf6iUA46ESBHM">② 绘制选项</div>
+    <div class="panel-body" data-page-node-id="BqDoN6FvpiYydIsC6pLxGt">
+      <div class="opts" data-page-node-id="ZfQIBKYwAtwZ0YS6GYebKB">
+        <!-- 文字与坐标设置 -->
+        <div class="opt-group">
+          <div class="opt-group-title">文字与坐标</div>
+          <div class="opt-grid">
+            <div class="opt-item" data-page-node-id="5k1up7Y0GuC0XZTr8Qdgbm">
+              <label data-page-node-id="tS3GE4WvqWy4goyhVT8GD6">文字字高</label>
+              <input type="number" id="txtHeight" value="2.5" min="0.5" step="0.5" data-page-node-id="L3kn1gKmbk8vQH5AI1N6tW">
+            </div>
+            <div class="opt-item" data-page-node-id="cYyGKFKF6efthwgykaoffw">
+              <label data-page-node-id="5gOuyZhTOeNiCLj598Rt9H">高程小数位</label>
+              <select id="elevDecimals" data-page-node-id="NYjlypMEY5PqMXsfp5DlNF">
+                <option value="" data-page-node-id="OJ9m2TTfBEcUHor2XTGddG">保持原样</option>
+                <option value="1" data-page-node-id="S9V9hhYBhEjoh3NGPXcQbB">1 位</option>
+                <option value="2" data-page-node-id="vuD9SJvbBv4k1wzA4jCVKZ">2 位</option>
+                <option value="3" data-page-node-id="D2eLe5iPNZFhYKIuodgCvd">3 位</option>
+              </select>
+            </div>
+          </div>
+          <div class="opt-item" style="margin-top:10px;">
+            <label data-page-node-id="Uc3tbs3UTRDXPRb24ApfuZ">测量坐标列顺序</label>
+            <select id="coordOrder" data-page-node-id="TpCAYVV2D5kxDr1f9B5nyU">
+              <option value="auto" selected data-page-node-id="m9SUlBHrHYkMSppyfFnGHg">自动识别（推荐）</option>
+              <option value="yx" data-page-node-id="sBixxGA2Te7xGZHteLiKCF">东坐标Y 在前、北坐标X 在后</option>
+              <option value="xy" data-page-node-id="JELZA30TNc6V6rgHs2y0ce">北坐标X 在前、东坐标Y 在后</option>
+            </select>
+          </div>
+          <div class="opt-item" style="margin-top:10px;">
+            <label>点的 Z 坐标</label>
+            <select id="zMode">
+              <option value="0" selected>按 0 绘制（平面点）</option>
+              <option value="elev">按高程值绘制（有高程的点）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 点样式 -->
+        <div class="opt-group">
+          <div class="opt-group-title">点样式（PDMODE）</div>
+          <div class="opt-item">
+            <label>展点符号（按点样式对话框顺序，默认第 9 种）</label>
+            <select id="pdmode">
+              <option value="0">第 1 种 · 圆点（PDMODE=0）</option>
+              <option value="32">第 2 种 · 圆圈（PDMODE=32）</option>
+              <option value="64">第 3 种 · 方框（PDMODE=64）</option>
+              <option value="96">第 4 种 · 方框套圆圈（PDMODE=96）</option>
+              <option value="1">第 5 种 · 不显示（PDMODE=1）</option>
+              <option value="33">第 6 种 · 圆圈加圆点（PDMODE=33）</option>
+              <option value="65">第 7 种 · 方框加圆点（PDMODE=65）</option>
+              <option value="97">第 8 种 · 方框圆圈加圆点（PDMODE=97）</option>
+              <option value="2" selected>第 9 种 · 加号（PDMODE=2）</option>
+              <option value="34">第 10 种 · 圆圈加号（PDMODE=34）</option>
+              <option value="66">第 11 种 · 方框加号（PDMODE=66）</option>
+              <option value="98">第 12 种 · 方框圆圈加号（PDMODE=98）</option>
+              <option value="3">第 13 种 · 叉号（PDMODE=3）</option>
+              <option value="35">第 14 种 · 圆圈叉号（PDMODE=35）</option>
+              <option value="67">第 15 种 · 方框叉号（PDMODE=67）</option>
+              <option value="99">第 16 种 · 方框圆圈叉号（PDMODE=99）</option>
+              <option value="4">第 17 种 · 竖线标记（PDMODE=4）</option>
+              <option value="36">第 18 种 · 圆圈竖线（PDMODE=36）</option>
+              <option value="68">第 19 种 · 方框竖线（PDMODE=68）</option>
+              <option value="100">第 20 种 · 方框圆圈竖线（PDMODE=100）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 绘制内容 -->
+        <div class="opt-group">
+          <div class="opt-group-title">绘制内容</div>
+          <div class="opt-stack">
+            <label class="opt-check" data-page-node-id="xkWqHDkvdFhFAIfHIAqlTT"><input type="checkbox" id="drawElev" checked data-page-node-id="WZnKpanGW3aC6V9qaAGjUg"><span>绘制高程文字</span></label>
+            <label class="opt-check" data-page-node-id="SlCtNj0smx4b7oRMEbeFwi"><input type="checkbox" id="drawName" checked data-page-node-id="VXPLcMA7ElgdfJFvA0Cbt7"><span>绘制编号文字（有高程时在高程上方 1.5 倍字高；无高程时在点位上）</span></label>
+          </div>
+        </div>
+
+        <!-- 图层设置 -->
+        <div class="opt-group">
+          <div class="opt-group-title">图层</div>
+          <div class="opt-stack">
+            <label class="opt-check"><input type="checkbox" id="useLayers" checked><span>新建图层绘制（各一层，颜色线型等取默认值）</span></label>
+            <div class="opt-grid-3">
+              <div class="opt-item">
+                <label>点图层名</label>
+                <input type="text" id="layerPoint" value="展点-点">
+              </div>
+              <div class="opt-item">
+                <label>高程图层名</label>
+                <input type="text" id="layerElev" value="展点-高程">
+              </div>
+              <div class="opt-item">
+                <label>编号图层名</label>
+                <input type="text" id="layerName" value="展点-编号">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /left -->
+
+  <div class="right">
+  <!-- ============ ③ 解析结果 ============ -->
+  <div class="panel" id="resultPanel" data-page-node-id="1x2ICkFkWRtMMzchckAj2d">
+    <div class="panel-title" data-page-node-id="JZCiePO5n8WAzXxHcEzMCD">③ 解析结果预览</div>
+    <div class="panel-body" data-page-node-id="ivHrDa2MQLCOngB3M0yc7F">
+      <div id="resultMsg" data-page-node-id="9dvQpTUbHz8okGEu075W1m"></div>
+      <div style="max-height: 320px; overflow: auto;" data-page-node-id="hX2zASCALF9XNuvsBEgMCw">
+        <table data-page-node-id="P1TqCn89stkYEBw7irjZ6o">
+          <thead data-page-node-id="GWPbE4cyGPo3SEkeuMVviY">
+            <tr data-page-node-id="miJSmgBjBdJPbHwl1jj45Y">
+              <th data-page-node-id="wlFCv38nQTvxNALKag5DT3">序号</th><th data-page-node-id="si5ES8J4YidCMC8DHhyJTV">桩名(编号)</th>
+              <th data-page-node-id="kjW9IzMxXuklEw4H7mCLCY">东坐标 Y(测量)</th><th data-page-node-id="C6giiH3Z6WgNRnKk2KYqDi">北坐标 X(测量)</th>
+              <th data-page-node-id="VNLjcdvBlA1JmrOPFZSKXk">CAD X(=东Y)</th><th data-page-node-id="EYII0XzIPXziEVjimnIDap">CAD Y(=北X)</th>
+              <th data-page-node-id="m5fdpCwrRIQcacKNw3qf3H">高程</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody" data-page-node-id="DBKAFL2agEu6IW9HBf4HEl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ④ 生成 CAD 命令 ============ -->
+  <div class="panel" id="outputPanel" data-page-node-id="jwJlA0vXHjxDymWIQfw1td">
+    <div class="panel-title" data-page-node-id="uXMnoEw6GXRzqOVuB29URQ">④ CAD 命令输出</div>
+    <div class="panel-body" data-page-node-id="TdMWkORDruz8B2okaKLgEo">
+      <textarea class="output-box" id="outputArea" readonly></textarea>
+      <div class="row-btns" data-page-node-id="FWFJg1MIac1OY4qinFqG3T">
+        <button class="btn btn-success" id="btnCopy" data-page-node-id="zd34VHlZeBTEQzCuO64wQo">复制命令</button>
+        <button class="btn btn-success" id="btnDownload" data-page-node-id="sAC1CeIH9TvaYIRJIpmqLh">下载 .scr 脚本文件</button>
+      </div>
+      <div class="tip" data-page-node-id="YBB57DhsgsJtjFdEQ4f1lH">
+        <b data-page-node-id="SqF4nDTxnTpZ8IEdSw6KKD">使用方法（二选一）：</b><br data-page-node-id="9HtTYdiURd5bCjSJE48hue">
+        ① <b data-page-node-id="QhZAcpBVLLvh1QJGq7xAQl">复制命令</b>：在 CAD 命令行空白处直接粘贴回车，程序自动逐点绘制（点 + 文字）。<br data-page-node-id="0yE6kHsq2R8dGKCuORcuIv">
+        ② <b data-page-node-id="3ZuEmemF23nxeYWdamds3N">下载 .scr</b>：在 CAD 命令行输入 <b data-page-node-id="oIs7rDsO8519EnKltDSL9E">SCRIPT</b>，选择下载的脚本文件执行。<br data-page-node-id="E7GDKWiY7ynlbR4k7dPiPY">
+        <b data-page-node-id="xHTQh2B28oXYyJfcLukW0F">注意：</b>本脚本假定当前文字样式(STANDARD)的字高为 0（由命令中显式给定字高）。若当前样式固定了字高，请先改为 0，否则文字命令会错位。<br>
+        <b>图层：</b>勾选"新建图层绘制"时，脚本用 <b>-LAYER → New</b> 一次性新建点/高程/编号三个图层（颜色、线型等取 CAD 默认值），并通过 <b>CLAYER</b> 逐元素切换图层，绘制完成后自动恢复 0 层；图层名中若含非法字符（\ / : ; ? * | = &lt; &gt; `）会被自动替换为 "-"。
+      </div>
+    </div>
+  </div>
+  </div><!-- /right -->
+  </div><!-- /main -->
+</div><!-- /wrap -->
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= 工具函数 ================= */
+
+  // 判断字符串是否为合法数字
+  function isNum(s) {
+    return s !== "" && !isNaN(Number(s));
+  }
+
+  // 取整数部分位数（忽略小数点与负号）
+  function intDigits(v) {
+    return String(Math.floor(Math.abs(v))).length;
+  }
+
+  /**
+   * 按整数位数自动识别两个坐标谁是北坐标(X)：
+   *   北坐标 X：我国范围内整数部分为 7 位（约 200万 ~ 600万）
+   *   东坐标 Y：整数部分为 6 位（如 592981），或 ≥8 位（含带号，如 38592981）
+   * @returns {"xy"|"yx"} "xy"表示第一个数是北坐标X，"yx"表示第一个数是东坐标Y
+   */
+  function detectOrder(a, b) {
+    var da = intDigits(a), db = intDigits(b);
+    if (da === 7 && db !== 7) return "xy";   // a 是北坐标
+    if (db === 7 && da !== 7) return "yx";   // b 是北坐标
+    if (da >= 8 && db <= 7) return "yx";     // a 含带号，是东坐标
+    if (db >= 8 && da <= 7) return "xy";     // b 含带号，是东坐标
+    return null; // 位数相同时无法识别，回退到用户设置
+  }
+
+  /**
+   * 解析批量输入文本
+   * @returns {{points:Array, skipped:Array, warnings:Array}}
+   *  point = {name, east, north, elev, eastStr, northStr, elevStr}
+   *  兼容三种行格式：桩名+2坐标（无高程）/ 桩名+2坐标+高程 / 无桩名
+   */
+  function parseInput(text, orderSetting) {
+    var points = [];
+    var skipped = [];
+    var warnings = [];
+    var lines = text.split(/\r?\n/);
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (line === "") continue;
+
+      // 按空白/逗号/分号/制表符拆分
+      var tokens = line.split(/[\s,;，；\t]+/).filter(function (t) { return t !== ""; });
+      if (tokens.length === 0) continue;
+
+      // 提取桩名：第一个非数字字段（表头行会因此被识别并跳过）
+      var name = "";
+      var nums = [];
+      var isHeader = false;
+      for (var j = 0; j < tokens.length; j++) {
+        if (isNum(tokens[j])) {
+          nums.push(tokens[j]);
+        } else {
+          if (j === 0) { name = tokens[j]; isHeader = true; } // 首字段非数字：可能是表头
+          else if (name === "") { name = tokens[j]; }
+        }
+      }
+
+      // 表头识别：字段中含"桩名/坐标/高程/东/北"等关键字，或只有表头名无数值
+      var headerKeywords = ["桩名", "坐标", "高程", "东座标", "北座标", "点号", "编号", "东", "北"];
+      var kwHit = tokens.some(function (t) {
+        return headerKeywords.some(function (k) { return t.indexOf(k) >= 0; });
+      });
+      if (kwHit || nums.length < 2) {
+        skipped.push({ line: i + 1, text: line, reason: kwHit ? "表头行，已跳过" : "有效数字不足（至少需要 2 个坐标）" });
+        continue;
+      }
+
+      // 数值字段组合：2个=仅平面坐标（无高程）；3个=坐标+高程；多于3个取前3个并给出警告
+      var a = Number(nums[0]);
+      var b = Number(nums[1]);
+      var eastStr, northStr, elevStr;
+      if (nums.length === 2) {
+        eastStr = nums[0]; northStr = nums[1]; elevStr = "";
+      } else {
+        eastStr = nums[0]; northStr = nums[1]; elevStr = nums[2];
+        if (nums.length > 3) {
+          warnings.push({ line: i + 1, text: "数值字段有 " + nums.length + " 个，已取前 3 个（其余忽略）" });
+        }
+      }
+
+      // 确定列顺序：自动识别优先，无法识别时回退到用户设置
+      var used = null;
+      if (orderSetting === "auto") {
+        used = detectOrder(a, b) || "yx"; // 默认按东坐标Y在前（常见表格顺序）
+      } else {
+        used = orderSetting; // "yx"=东在前, "xy"=北在前
+      }
+
+      if (used === "yx") { // 东坐标Y在前
+        eastStr = nums[0]; northStr = nums[1];
+      } else {             // 北坐标X在前
+        northStr = nums[0]; eastStr = nums[1];
+      }
+
+      points.push({
+        name: name,
+        eastStr: eastStr,
+        northStr: northStr,
+        elevStr: elevStr,
+        east: Number(eastStr),
+        north: Number(northStr),
+        elev: elevStr === "" ? null : Number(elevStr)
+      });
+    }
+    return { points: points, skipped: skipped, warnings: warnings };
+  }
+
+  // 高程文字内容（按小数位设置格式化）
+  function elevText(p, decimals) {
+    if (p.elevStr === "") return "";
+    if (decimals === "" ) return p.elevStr;
+    return Number(p.elevStr).toFixed(Number(decimals));
+  }
+
+  // 点的 Z 坐标字符串：zMode="elev" 且该点有高程时取高程值（与高程文字同精度），否则为二维点（Z 默认 0）
+  function pointZ(p, opts) {
+    if (opts.zMode === "elev") {
+      var e = elevText(p, opts.decimals);
+      if (e !== "") return e;
+    }
+    return null; // 返回 null 表示输出二维坐标
+  }
+
+  // 图层名合法性处理：去除 CAD 图层名不允许的字符 <>/":;?*|=`
+  function sanitizeLayerName(s) {
+    return String(s).trim().replace(/[<>\/\\":;\?\*\|=`]/g, "-");
+  }
+
+  /**
+   * 生成 CAD 脚本命令文本（同时适用于命令行粘贴与 .scr 脚本）
+   * 结构：新建图层 → 每点依次为 切换图层+POINT → 切换图层+编号TEXT → 切换图层+高程TEXT → 恢复 0 层 → ZOOM E
+   */
+  function buildScript(points, opts) {
+    var h = opts.height;
+    var lines = [];
+    var fmtCoord = function (v) {
+      // 坐标保留原始精度，去掉可能的多余符号
+      return String(v);
+    };
+
+    // ---- 点样式：绘制前设置 PDMODE（点样式对话框第 N 种对应的系统变量值）----
+    // 在建点之前设置，保证本脚本生成的点按所选样式显示
+    if (opts.pdmode !== "" && opts.pdmode !== undefined) {
+      lines.push("PDMODE");
+      lines.push(String(opts.pdmode));
+    }
+
+    // ---- 图层设置：勾选时为点/高程/编号各新建一个图层（其余参数取默认值）----
+    var layerPoint = "", layerElev = "", layerName = "";
+    if (opts.layersEnabled) {
+      layerPoint = sanitizeLayerName(opts.layerPoint);
+      layerElev  = sanitizeLayerName(opts.layerElev);
+      layerName  = sanitizeLayerName(opts.layerName);
+      // 收集非空图层名，一次性新建（-LAYER 的 New 选项支持逗号分隔多个名称）
+      var toCreate = [];
+      if (layerPoint !== "" && toCreate.indexOf(layerPoint) < 0) toCreate.push(layerPoint);
+      if (layerElev  !== "" && toCreate.indexOf(layerElev)  < 0) toCreate.push(layerElev);
+      if (layerName  !== "" && toCreate.indexOf(layerName)  < 0) toCreate.push(layerName);
+      if (toCreate.length > 0) {
+        lines.push("-LAYER");
+        lines.push("N");
+        lines.push(toCreate.join(","));
+        lines.push(""); // 空行结束 -LAYER 命令
+      }
+    }
+
+    // 切换当前图层的辅助函数：图层未启用或名为空时不切换（绘制在当前层）
+    var setLayer = function (name) {
+      if (opts.layersEnabled && name !== "") {
+        lines.push("CLAYER");
+        lines.push(name);
+      }
+    };
+
+    // ---- 预计算每点的绘制数据（坐标串、编号/高程文字及插入点）----
+    var pointCmds = [];   // 点：坐标串
+    var nameCmds = [];    // 编号：插入点坐标串 + 文字内容
+    var elevCmds = [];    // 高程：插入点坐标串 + 文字内容
+    points.forEach(function (p) {
+      var x = fmtCoord(p.east);   // CAD X = 东坐标（测量Y）
+      var y = fmtCoord(p.north);  // CAD Y = 北坐标（测量X），与测量坐标颠倒
+
+      // Z 坐标：按用户选择（0 或高程值），点与文字插入点同步使用
+      var z = pointZ(p, opts);
+      var xy = x + "," + y;
+      var xyz = (z === null) ? xy : (xy + "," + z);
+      pointCmds.push(xyz);
+
+      var elev = elevText(p, opts.decimals);
+      var name = p.name;
+
+      // 编号文字插入点：绘制了高程文字 → 高程上方 1.5 倍字高；否则 → 点位上
+      if (opts.drawName && name !== "") {
+        var nameY = (opts.drawElev && elev !== "") ? (p.north + 1.5 * h).toFixed(4) : y;
+        var nameXY = x + "," + nameY;
+        nameCmds.push({ at: (z === null) ? nameXY : (nameXY + "," + z), text: name });
+      }
+
+      // 高程文字插入点：点位上（Z 与点同步）
+      if (opts.drawElev && elev !== "") {
+        elevCmds.push({ at: xyz, text: elev });
+      }
+    });
+
+    /* ---- 按图层分组绘制：同一图层内的元素一次画完，避免反复切换图层 ----
+       顺序：点 → 编号文字 → 高程文字 */
+    if (pointCmds.length > 0) {
+      setLayer(layerPoint);
+      pointCmds.forEach(function (at) {
+        lines.push("POINT");
+        lines.push(at);
+      });
+    }
+    if (nameCmds.length > 0) {
+      setLayer(layerName);
+      nameCmds.forEach(function (c) {
+        lines.push("-TEXT");
+        lines.push(c.at);
+        lines.push(String(h));
+        lines.push("0");
+        lines.push(c.text);
+      });
+    }
+    if (elevCmds.length > 0) {
+      setLayer(layerElev);
+      elevCmds.forEach(function (c) {
+        lines.push("-TEXT");
+        lines.push(c.at);
+        lines.push(String(h));
+        lines.push("0");
+        lines.push(c.text);
+      });
+    }
+
+    // 恢复当前层为 0 层，避免用户后续绘图停留在展点图层
+    if (opts.layersEnabled && (layerPoint !== "" || layerElev !== "" || layerName !== "")) {
+      lines.push("CLAYER");
+      lines.push("0");
+    }
+
+    // 结束后缩放至图形范围，便于查看
+    if (points.length > 0) {
+      lines.push("ZOOM");
+      lines.push("E");
+    }
+    // \r\n 行尾保证 CAD 脚本在 Windows 下正确执行
+    return lines.join("\r\n") + "\r\n";
+  }
+
+  /* ================= 界面逻辑 ================= */
+
+  var parsedPoints = []; // 当前解析成功的点集
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function showMsg(el, type, html) {
+    el.className = "msg msg-" + type;
+    el.innerHTML = html;
+  }
+
+  // 解析并渲染预览表
+  function doParse() {
+    var text = $("inputArea").value;
+    var orderSetting = $("coordOrder").value;
+    var result = parseInput(text, orderSetting);
+    parsedPoints = result.points;
+
+    var msgEl = $("resultMsg");
+    var tbody = $("resultBody");
+    tbody.innerHTML = "";
+
+    if (parsedPoints.length === 0) {
+      showMsg(msgEl, "err", "未解析到有效点位，请检查输入格式（每行至少 2 个坐标数字）。");
+      $("resultPanel").classList.remove("hidden");
+      $("outputPanel").classList.add("hidden");
+      return;
+    }
+
+    // 逐行渲染预览：CAD X=东坐标（测量Y），CAD Y=北坐标（测量X），已颠倒
+    parsedPoints.forEach(function (p, idx) {
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + (idx + 1) + "</td>" +
+        "<td>" + (p.name || "—") + "</td>" +
+        '<td class="num">' + p.eastStr + "</td>" +
+        '<td class="num">' + p.northStr + "</td>" +
+        '<td class="num">' + p.eastStr + "</td>" +
+        '<td class="num">' + p.northStr + "</td>" +
+        '<td class="num">' + (p.elevStr || "—") + "</td>";
+      tbody.appendChild(tr);
+    });
+
+    // 汇总信息 + 跳过行/警告提示
+    var hasWarn = result.skipped.length > 0 || result.warnings.length > 0;
+    var html = "解析成功：<b>" + parsedPoints.length + "</b> 个点。";
+    if (result.skipped.length > 0) {
+      html += "<br>跳过 " + result.skipped.length + " 行：" + result.skipped.map(function (s) {
+        return "第 " + s.line + " 行（" + s.reason + "）";
+      }).join("；");
+    }
+    if (result.warnings.length > 0) {
+      html += "<br>警告：" + result.warnings.map(function (w) {
+        return "第 " + w.line + " 行（" + w.text + "）";
+      }).join("；");
+    }
+    // 无高程的点提示：区分"全部无高程"（纯平面展点）与"部分无高程"
+    var noElev = parsedPoints.filter(function (p) { return p.elevStr === ""; }).length;
+    if (noElev === parsedPoints.length) {
+      html += "<br>所有点均无高程信息，按<b>纯平面坐标点</b>处理：只绘制坐标点" + ($("drawName").checked ? "和编号文字" : "") + "，不绘制高程。";
+    } else if (noElev > 0) {
+      html += "<br>其中 " + noElev + " 个点无高程，将只绘制坐标点" + ($("drawName").checked ? "和编号" : "") + "。";
+    }
+    showMsg(msgEl, hasWarn ? "warn" : "ok", html);
+
+    $("resultPanel").classList.remove("hidden");
+    doGenerate();
+  }
+
+  // 生成 CAD 命令文本
+  function doGenerate() {
+    if (parsedPoints.length === 0) return;
+    var opts = {
+      height: Number($("txtHeight").value) || 2.5,
+      decimals: $("elevDecimals").value,
+      pdmode: $("pdmode").value,
+      drawElev: $("drawElev").checked,
+      drawName: $("drawName").checked,
+      zMode: $("zMode").value,
+      layersEnabled: $("useLayers").checked,
+      layerPoint: $("layerPoint").value,
+      layerElev: $("layerElev").value,
+      layerName: $("layerName").value
+    };
+    $("outputArea").value = buildScript(parsedPoints, opts);
+    $("outputPanel").classList.remove("hidden");
+  }
+
+  /* ================= 事件绑定 ================= */
+
+  $("btnParse").addEventListener("click", doParse);
+
+  // 选项变化时重新生成脚本（无需重新解析）
+  ["txtHeight", "elevDecimals", "pdmode", "coordOrder", "drawElev", "drawName", "zMode",
+   "useLayers", "layerPoint", "layerElev", "layerName"].forEach(function (id) {
+    $(id).addEventListener("change", function () {
+      if (parsedPoints.length > 0) {
+        doGenerate();
+        if (id === "drawName") doParse(); // 编号选项影响"无高程"提示文案
+      }
+    });
+  });
+
+  // 复制命令到剪贴板
+  $("btnCopy").addEventListener("click", function () {
+    var out = $("outputArea");
+    out.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.value).then(function () {
+        $("btnCopy").textContent = "✓ 已复制";
+        setTimeout(function () { $("btnCopy").textContent = "复制命令"; }, 1500);
+      });
+    } else {
+      document.execCommand("copy");
+      $("btnCopy").textContent = "✓ 已复制";
+      setTimeout(function () { $("btnCopy").textContent = "复制命令"; }, 1500);
+    }
+  });
+
+  // 下载 .scr 脚本文件
+  $("btnDownload").addEventListener("click", function () {
+    var blob = new Blob(["\ufeff" + $("outputArea").value], { type: "application/octet-stream" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "CAD展点.scr";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // 填入示例数据（WQ1~WQ4，空格分隔格式）
+  $("btnSample").addEventListener("click", function () {
+    $("inputArea").value =
+      "WQ1 592981.81 4150469.22 1379.72\n" +
+      "WQ2 593026.59 4150213.62 1382.8\n" +
+      "WQ3 592925.18 4150195.96 1383\n" +
+      "WQ4 592880.36 4150451.45 1381.26";
+    doParse();
+  });
+
+  $("btnClear").addEventListener("click", function () {
+    $("inputArea").value = "";
+    $("resultPanel").classList.add("hidden");
+    $("outputPanel").classList.add("hidden");
+    parsedPoints = [];
+  });
+
+  // Ctrl+Enter 快捷解析
+  $("inputArea").addEventListener("keydown", function (e) {
+    if (e.ctrlKey && e.key === "Enter") doParse();
+  });
+
+  // 页面加载时自动填入示例数据并解析，使右侧预览与命令输出默认有示例内容
+  $("btnSample").click();
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "\u5207\u6362\u5230\u6697\u8272\u4e3b\u9898" : "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/CAD展点.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>

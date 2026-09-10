@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新能源项目环境效益计算表</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/新能源项目环境效益计算表.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/新能源项目环境效益计算表.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= 页头 ================= -->
+  <div class="header">
+    <span class="version">V1.2 · 参数可调</span>
+    <h1>新能源项目环境效益计算表</h1>
+    <div class="sub">系数依据（当前值，随下方输入实时联动）：
+      <b>碳粉尘 <span id="b_dust">17</span> mg/kWh</b> ｜
+      <b>SO<sub>2</sub> <span id="b_so2">83</span> mg/kWh</b> ｜
+      <b>NO<sub>x</sub> <span id="b_nox">133</span> mg/kWh</b> ｜
+      <b>CO<sub>2</sub> <span id="b_co2">824</span> g/kWh</b> ｜
+      <b>标准煤耗 <span id="b_coal">301.5</span> g/kWh</b>
+      —— 以上系数与年上网电量均可在下方表格中调整，结果自动重算。
+    </div>
+  </div>
+
+  <!-- ================= ① 输入参数（结构与 ③④ 一致：独立卡片） ================= -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head"><span>① 输入参数</span><span class="tip">年上网电量（唯一主输入，修改后全部结果自动重算）</span></div>
+    <div class="card-body">
+      <div class="alert" id="alertBox"></div>
+      <table class="in-tab">
+        <thead>
+          <tr><th style="width:30%;">参数名称</th><th style="width:30%;">数值</th><th style="width:12%;">单位</th><th style="width:28%;">说明</th></tr>
+        </thead>
+        <tbody>
+          <tr class="cell-e">
+            <td class="name">年上网电量 E</td>
+            <td>
+              <div class="num-wrap">
+                <input type="number" id="inE" min="0" step="any" inputmode="decimal" value="297000">
+              </div>
+            </td>
+            <td>MWh</td>
+            <td class="desc">基准 297000 MWh（≈ 电站年发电量扣除厂用电后的上网电量）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= ② 减排 / 节能系数（独立卡片） ================= -->
+  <div class="card">
+    <div class="card-head"><span>② 减排 / 节能系数</span>
+      <span class="tip">蓝色输入框均可手动调整（默认值为可研基准系数）</span></div>
+    <div class="card-body">
+      <table class="in-tab">
+        <thead>
+          <tr><th style="width:30%;">指标</th><th style="width:30%;">系数值</th><th style="width:12%;">单位</th><th style="width:28%;">说明</th></tr>
+        </thead>
+        <tbody id="coefBody">
+          <!-- 行由 JS 根据 CONFIG 生成 -->
+        </tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="btnReset">↺ 恢复基准参数</button>
+        <button class="btn btn-primary" id="btnRecheck">✓ 重新校验并计算</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ③ 减排效益输出 ================= -->
+  <div class="card">
+    <div class="card-head"><span>③ 减排效益输出（自动计算）</span>
+      <span class="tip">与 Excel 公式完全一致：结果 = 年上网电量 × 系数 ÷ 换算分母（10⁷ / 10⁶）</span></div>
+    <div class="card-body">
+      <div class="grid" id="resGrid"><!-- 结果卡片由 JS 生成 --></div>
+      <div class="hint-line">
+        ※ 换算规则（与原表公式一一对应，E 单位 MWh）：<br>
+        　· 节约标准煤（万吨）= E × 煤耗(g/kWh) ÷ 10⁷，　CO<sub>2</sub>（万吨）= E × CO₂(g/kWh) ÷ 10⁷；<br>
+        　· 碳粉尘 / SO<sub>2</sub> / NO<sub>x</sub>（吨）= E × 系数(mg/kWh) ÷ 10⁶。<br>
+        　推导：1 MWh = 1000 kWh；1 MWh × 1 g/kWh = 1000 g = 1 kg；1 MWh × 1 mg/kWh = 1000 mg = 1 g。
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ④ 成果描述（生成完整说明话术） ================= -->
+  <div class="card">
+    <div class="card-head"><span>④ 成果描述（随参数实时生成，可直接引用）</span>
+      <span class="tip">下方文字中的全部数据 = 当前参数计算后的结果</span></div>
+    <div class="card-body">
+      <div class="para-box" id="paraBox"></div>
+      <div class="para-foot">
+        <button class="btn btn-primary" id="btnCopy">📋 一键复制文本</button>
+        <span class="copied-msg" id="copiedMsg">✔ 已复制到剪贴板</span>
+        <span class="hint-line" style="margin:0;">文案结构依据《环境影响评价》常规节能降耗测算口径，数字随上方参数实时联动。</span>
+      </div>
+      <!-- ===== ⑤ 一键输出高清图片：功能已停用（代码保留，去掉本注释即可恢复）=====
+      ⑤ 一键输出高清图片（已停用）
+      <div class="img-foot">
+        <button class="btn btn-primary" id="btnImg">🖼 一键输出高清图片</button>
+        <label class="lbl">清晰度
+          <select id="imgScale" class="sel" title="PNG 输出宽度 = 1600 px × 倍率">
+            <option value="1">1× 标准</option>
+            <option value="2" selected>2× 高清</option>
+            <option value="3">3× 超清</option>
+          </select>
+        </label>
+        <span class="copied-msg" id="imgMsg"></span>
+        <span class="hint-line" style="margin:0;">按当前页面参数自动排版生成报告式高清 PNG（页头 / 参数表 / 结果表 / 完整成果描述 / 计算口径），可直接插入报告或打印。</span>
+      </div>
+      -->
+
+    </div>
+  </div>
+
+  <footer>新能源项目环境效益计算表 · 单文件 HTML 计算器</footer>
+</div>
+
+<script>
+/* ============================================================
+ * 新能源项目环境效益计算表（原《减排计算表.xlsx》→ HTML 计算器）V1.2
+ * 计算逻辑与原 Excel（B6 × B10~B14 公式）逐条对应，杜绝单位换算错误。
+ * V1.1 修复：脚本初始化顺序崩溃、页头"系数依据"随输入实时联动。
+ * V1.2 新增：一键输出高清图片（原生 Canvas 报告排版，零第三方依赖）——
+ * 该功能的 UI / 样式 / JS 已整体注释停用，代码保留在文件内，取消注释即可恢复。
+ * ============================================================ */
+
+/* ---------- 参数集中定义（默认 = Excel 基准值） ---------- */
+const CFG = {
+  E:      { label:'年上网电量 E',    val: 297000, unit:'MWh',     isE:true },
+  coefs:  [
+    { key:'coal', label:'节约标准煤（煤耗）', coeff:301.5, unit:'g/kWh',
+      kind:'g',  resultUnit:'万吨', div:1e7, desc:'基准 301.5 g/kWh = 0.3015 kg/kWh（可调）', bg:'a' },
+    { key:'dust', label:'碳粉尘',              coeff:17,    unit:'mg/kWh',
+      kind:'mg', resultUnit:'吨',   div:1e6, desc:'基准 17 mg/kWh',                          bg:'b' },
+    { key:'so2',  label:'SO₂',                 coeff:83,    unit:'mg/kWh',
+      kind:'mg', resultUnit:'吨',   div:1e6, desc:'基准 83 mg/kWh',                           bg:'a' },
+    { key:'nox',  label:'NOₓ',                 coeff:133,   unit:'mg/kWh',
+      kind:'mg', resultUnit:'吨',   div:1e6, desc:'基准 133 mg/kWh',                          bg:'b' },
+    { key:'co2',  label:'CO₂',                 coeff:824,   unit:'g/kWh',
+      kind:'g',  resultUnit:'万吨', div:1e7, desc:'基准 824 g/kWh',                           bg:'a' },
+  ]
+};
+
+/* ---------- DOM 引用 ---------- */
+const $ = id => document.getElementById(id);
+const inputE   = $('inE');
+const coefBody = $('coefBody');
+const alertBox = $('alertBox');
+const paraBox  = $('paraBox');
+const resGrid  = $('resGrid');
+const copiedMsg= $('copiedMsg');
+const inputs = {};          // 系数输入框引用 { key: <input> }
+let lastValid = null;       // 最近一次有效计算快照（非法输入时仍展示旧值并报错）
+
+/* ---------- 数值工具 ---------- */
+function parseNum(el){
+  const v = el.value.trim();
+  if (v === '') return NaN;
+  return Number(v);
+}
+/* 去掉多余小数尾 0 的紧凑显示：39.50 → 39.5，17 → 17，0.3015 → 0.3015 */
+function trimNum(v, maxDec){
+  if (!isFinite(v)) return '—';
+  const p = Math.pow(10, maxDec == null ? 10 : maxDec);
+  const r = Math.round((v + Number.EPSILON) * p) / p;
+  return String(parseFloat(r.toFixed(maxDec == null ? 10 : maxDec)));
+}
+/* 千分位 + 两位小数（结果卡显示，同 Excel #,##0.00） */
+function fmt2(v){
+  if (!isFinite(v)) return '—';
+  return v.toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+/* 大数千分位（公式中的电量显示） */
+function fmtInt(v){ return Math.round(v).toLocaleString('zh-CN'); }
+
+/* ---------- 生成系数输入行 ---------- */
+function buildCoefRows(){
+  coefBody.innerHTML = '';
+  CFG.coefs.forEach((c, i) => {
+    const tr = document.createElement('tr');
+    tr.className = c.bg === 'b' ? 'coef-b' : 'coef-a';
+    tr.innerHTML =
+      `<td class="name">${c.label}</td>
+       <td><div class="num-wrap">
+             <input type="number" id="c_${c.key}" min="0" step="any" inputmode="decimal" value="${c.coeff}">
+           </div></td>
+       <td style="color:var(--c-sub);font-size:12.5px;">${c.unit}</td>
+       <td class="desc">${c.desc}</td>`;
+    coefBody.appendChild(tr);
+    inputs[c.key] = tr.querySelector('input');
+  });
+}
+
+/* ---------- 校验：返回错误数组；通过则返回采集参数 ---------- */
+function validate(){
+  const errs = [];
+  const p = { E: NaN, coefs: {} };
+
+  const E = parseNum(inputE);
+  if (!isFinite(E))      errs.push('年上网电量：请输入有效数字');
+  else if (E <= 0)       errs.push('年上网电量：必须大于 0');
+  else if (E > 1e12)     errs.push('年上网电量：数值异常偏大（> 10¹² MWh），请检查');
+  p.E = E;
+  inputE.classList.toggle('invalid', errs.length > 0);
+
+  CFG.coefs.forEach(c => {
+    const el = inputs[c.key];
+    const v = parseNum(el);
+    if (!isFinite(v))      errs.push(`${c.label}：系数请输入有效数字`);
+    else if (v < 0)        errs.push(`${c.label}：系数不能为负`);
+    else if (v > 1e9)      errs.push(`${c.label}：系数异常偏大，请检查`);
+    p.coefs[c.key] = v;
+    el.classList.toggle('invalid', !isFinite(v) || v < 0);
+  });
+  return { errs, p };
+}
+
+/* ---------- 核心计算：E(MWh) × 系数 ÷ 换算分母（与原表 B18:B22 完全一致） ---------- */
+function compute(p){
+  const E = p.E;
+  return CFG.coefs.map(c => {
+    const full = E * p.coefs[c.key] / c.div;     // 全精度结果
+    return { c, full, disp: fmt2(full) };        // disp = 两位小数显示
+  });
+}
+
+/* ---------- 说明话术模板（结构照抄用户给定文案） ---------- */
+function buildPara(E, coeffVals, results){
+  const r = {}; results.forEach(x => r[x.c.key] = x);
+  /* 各数据点的取用格式：
+     电量   → 紧凑整数/小数（原文 297000，无千分位）
+     煤耗   → g/kWh ÷1000 → kg/kWh（原文 0.3015）
+     系数   → 紧凑原文（17 / 83 / 133 / 824）
+     减排量 → 四舍五入两位小数后去尾 0（8.95 / 5.05 / 24.65 / 39.5 / 24.47） */
+  const Estr      = trimNum(E);
+  const coalKg    = coeffVals.coal / 1000;                 // g/kWh → kg/kWh
+  const coalKgStr = trimNum(coalKg);
+  const d_  = s => trimNum(r[s].full, 2);                  // 减排量：保留2位并去尾0
+
+  return `本项目建成后，平均年上网电量约<span class="hl">${Estr}MWh</span>。` +
+    `与目前的燃煤火电厂相比，按消耗标准煤<span class="hl">${coalKgStr}kg/kWh</span>计，` +
+    `每年可为国家节约标准煤<span class="hl">${d_('coal')}万吨</span>；` +
+    `若碳粉尘排放量按<span class="hl">${trimNum(coeffVals.dust)}mg/kWh</span>计，` +
+    `SO2排放量按<span class="hl">${trimNum(coeffVals.so2)}mg/kWh</span>计，` +
+    `NOX排放量按<span class="hl">${trimNum(coeffVals.nox)}mg/kWh</span>计，` +
+    `CO2排放量按<span class="hl">${trimNum(coeffVals.co2)}g/kWh</span>计，` +
+    `则本项目减少的污染物排放量：碳粉尘<span class="hl">${d_('dust')}吨/年</span>、` +
+    `SO2排放量<span class="hl">${d_('so2')}吨/年</span>，` +
+    `NOX排放量<span class="hl">${d_('nox')}吨/年</span>，` +
+    `CO2排放量<span class="hl">${d_('co2')}万吨/年</span>。`;
+}
+
+/* ---------- 纯文本版话术（复制用，去掉高亮 span） ---------- */
+function buildParaText(E, coeffVals, results){
+  const r = {}; results.forEach(x => r[x.c.key] = x);
+  const d_ = s => trimNum(r[s].full, 2);
+  return `本项目建成后，平均年上网电量约${trimNum(E)}MWh。` +
+    `与目前的燃煤火电厂相比，按消耗标准煤${trimNum(coeffVals.coal / 1000)}kg/kWh计，` +
+    `每年可为国家节约标准煤${d_('coal')}万吨；` +
+    `若碳粉尘排放量按${trimNum(coeffVals.dust)}mg/kWh计，` +
+    `SO2排放量按${trimNum(coeffVals.so2)}mg/kWh计，` +
+    `NOX排放量按${trimNum(coeffVals.nox)}mg/kWh计，` +
+    `CO2排放量按${trimNum(coeffVals.co2)}g/kWh计，` +
+    `则本项目减少的污染物排放量：碳粉尘${d_('dust')}吨/年、` +
+    `SO2排放量${d_('so2')}吨/年，NOX排放量${d_('nox')}吨/年，` +
+    `CO2排放量${d_('co2')}万吨/年。`;
+}
+
+/* ---------- 页头"系数依据"与系数输入框实时联动 ---------- */
+function updateBasis(vals){
+  const map = { dust:'碳粉尘', so2:'SO₂', nox:'NOₓ', co2:'CO₂', coal:'标准煤耗' };
+  CFG.coefs.forEach(c => {
+    const el = $(`b_${c.key}`);
+    if (el){
+      const v = (vals && isFinite(vals[c.key])) ? vals[c.key]
+               : parseNum(inputs[c.key]);
+      el.textContent = isFinite(v) ? trimNum(v) : '—';
+    }
+  });
+}
+
+/* ---------- 渲染 ---------- */
+function render(){
+  const { errs, p } = validate();
+
+  /* 页头"系数依据"始终跟随输入框当前值（含非法输入时显示 —） */
+  updateBasis(p.coefs);
+
+  if (errs.length){
+    /* 校验失败：红条提示，保留上次有效结果展示，不生成话术 */
+    alertBox.innerHTML = '<b>输入校验未通过：</b><ul>' +
+      errs.map(e => `<li>${e}</li>`).join('') + '</ul>';
+    alertBox.classList.add('show');
+    if (lastValid) renderValid(lastValid);
+    else { resGrid.innerHTML = ''; paraBox.textContent = '—— 请先修正输入参数 ——'; }
+    return;
+  }
+  alertBox.classList.remove('show');
+  const snapshot = { p, results: compute(p), Estr: trimNum(p.E),
+                     text: null };
+  snapshot.text = buildParaText(p.E, p.coefs, snapshot.results);
+  lastValid = snapshot;
+  renderValid(snapshot);
+}
+
+function renderValid(s){
+  /* ---- 结果卡片 ---- */
+  resGrid.innerHTML = '';
+  s.results.forEach(x => {
+    const el = document.createElement('div');
+    el.className = 'res-card';
+    el.innerHTML =
+      `<div class="rc-name">${x.c.label}</div>` +
+      `<div class="rc-val">${x.disp}<small>${x.c.resultUnit}</small></div>` +
+      `<div class="rc-exact">全精度 ${trimNum(x.full, 8)} ${x.c.resultUnit}</div>` +
+      `<div class="rc-formula">${fmtInt(s.p.E)} MWh × ${trimNum(s.p.coefs[x.c.key])} ${x.c.unit} ÷ ${fmtInt(x.c.div)}</div>`;
+    resGrid.appendChild(el);
+  });
+  /* ---- 话术 ---- */
+  paraBox.innerHTML = buildPara(s.p.E, s.p.coefs, s.results);
+}
+
+/* ---------- 事件绑定 ---------- */
+inputE.addEventListener('input', render);
+
+$('btnReset').addEventListener('click', () => {
+  inputE.value = CFG.E.val;
+  CFG.coefs.forEach(c => inputs[c.key].value = c.coeff);
+  render();
+  copiedMsg.classList.remove('show');
+});
+$('btnRecheck').addEventListener('click', () => { copiedMsg.classList.remove('show'); render(); });
+
+/* 复制：优先 Clipboard API，降级 execCommand */
+$('btnCopy').addEventListener('click', async () => {
+  if (!lastValid){ render(); if (!lastValid) return; }
+  const text = lastValid.text;
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; }
+  catch(e){
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch(e2){ ok = false; }
+  }
+  if (ok){
+    copiedMsg.classList.add('show');
+    setTimeout(() => copiedMsg.classList.remove('show'), 2500);
+  } else {
+    copiedMsg.textContent = '✘ 复制失败，请手动选择上方文字';
+    copiedMsg.classList.add('show');
+    setTimeout(() => { copiedMsg.classList.remove('show');
+                       copiedMsg.textContent = '✔ 已复制到剪贴板'; }, 2500);
+  }
+});
+
+// /* ============================================================
+//  * ⑤ 一键输出高清图片（原生 Canvas 排版，零第三方依赖，离线可用）
+//  * 流程：读取当前输入 → compute() → 纯文本话术 → 报告排版 → 下载 PNG
+//  * 图片内容：页头 / ①输入参数 / ②减排系数 / ③结果表 / ④成果描述 / 附计算口径
+//  * ============================================================ */
+// const FONT_FAMILY = '"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif';
+
+// function pad2(n){ return String(n).padStart(2, '0'); }
+// /* 页面展示用日期：2026-09-03 18:58 */
+// function nowStamp(){
+//   const d = new Date();
+//   return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+// }
+// /* 文件名用时间戳：20260903_1858 */
+// function fileStamp(){
+//   const d = new Date();
+//   return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+// }
+// /* 圆角矩形路径 */
+// function rr(ctx, x, y, w, h, r){
+//   r = Math.min(r, w/2, h/2);
+//   ctx.beginPath();
+//   ctx.moveTo(x+r, y);
+//   ctx.arcTo(x+w, y, x+w, y+h, r);
+//   ctx.arcTo(x+w, y+h, x, y+h, r);
+//   ctx.arcTo(x, y+h, x, y, r);
+//   ctx.arcTo(x, y, x+w, y, r);
+//   ctx.closePath();
+// }
+// /* 文本自动换行（中文逐字；标点不置行首） */
+// function wrapText(ctx, text, maxW){
+//   const lines = []; let line = '';
+//   const noHead = '，。、；：！？）》》』」…—·';
+//   for (const ch of text){
+//     if (ctx.measureText(line + ch).width <= maxW){ line += ch; continue; }
+//     if (line){
+//       if (noHead.includes(ch) && lines.length){ lines[lines.length-1] += ch; }
+//       else { lines.push(line); line = ch; }
+//     } else { line = ch; }
+//   }
+//   if (line) lines.push(line);
+//   return lines;
+// }
+// /* 区块标题：左侧竖条 + 标题 +（右侧灰字提示） */
+// function drawSectionTitle(ctx, x, rightX, y, title, tip){
+//   ctx.fillStyle = '#2F5496';
+//   rr(ctx, x, y+3, 7, 30, 3.5); ctx.fill();
+//   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+//   ctx.font = `700 27px ${FONT_FAMILY}`;
+//   ctx.fillStyle = '#1f3a6d';
+//   ctx.fillText(title, x+21, y+30);
+//   if (tip){
+//     ctx.textAlign = 'right';
+//     ctx.font = `400 18px ${FONT_FAMILY}`;
+//     ctx.fillStyle = '#8b97a8';
+//     ctx.fillText(tip, rightX, y+30);
+//   }
+//   return y;
+// }
+// /* 数据表格：表头深蓝底；单元格支持字符串或 {t,fs,bold,color,align} */
+// function drawTable(ctx, x, y, colW, headers, rows, o){
+//   o = o || {};
+//   const hH = o.headerH||46, rowH = o.rowH||54, fs = o.fs||21, hfs = o.hfs||20, pad = o.pad||16;
+//   const tw = colW.reduce((a,b)=>a+b, 0);
+//   ctx.textBaseline = 'middle';
+//   /* 表头 */
+//   ctx.fillStyle = o.hbg || '#2F5496';
+//   ctx.fillRect(x, y, tw, hH);
+//   ctx.font = `600 ${hfs}px ${FONT_FAMILY}`;
+//   ctx.fillStyle = '#ffffff';
+//   ctx.textAlign = 'left';
+//   let cx = x;
+//   headers.forEach((h,i)=>{ ctx.fillText(h, cx+pad, y+hH/2+1); cx += colW[i]; });
+//   y += hH;
+//   /* 数据行 */
+//   for (let r=0; r<rows.length; r++){
+//     const row = rows[r];
+//     ctx.fillStyle = row.bg || ((r%2) ? '#f4f8fd' : '#ffffff');
+//     ctx.fillRect(x, y, tw, rowH);
+//     ctx.fillStyle = '#dce4ef';                 /* 行上分隔线 */
+//     ctx.fillRect(x, y, tw, 1);
+//     cx = x;
+//     row.cells.forEach((c, idx) => {
+//       const t     = (typeof c === 'string') ? c : c.t;
+//       const cfs   = (typeof c === 'object' && c.fs)   || fs;
+//       const bold  =  (typeof c === 'object' && c.bold);
+//       const color = (typeof c === 'object' && c.color) || '#22303f';
+//       const align = (typeof c === 'object' && c.align) || 'left';
+//       ctx.font = `${bold?'600':'400'} ${cfs}px ${FONT_FAMILY}`;
+//       ctx.fillStyle = color;
+//       ctx.textAlign = align;
+//       ctx.fillText(t, (align==='right' ? cx+colW[idx]-pad : cx+pad), y+rowH/2+1);
+//       cx += colW[idx];
+//     });
+//     y += rowH;
+//   }
+//   /* 底线 */
+//   ctx.strokeStyle = '#dce4ef'; ctx.lineWidth = 1;
+//   ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x+tw, y); ctx.stroke();
+//   return y;
+// }
+
+// /* 整幅报告排版（逻辑坐标绘制；先调用一遍测高，再正式绘制） */
+// function drawScene(ctx, W, PAD, sn, scale, dateStr){
+//   const CW = W - PAD*2;
+//   const X  = PAD;
+//   const gray = '#6b7686', blue = '#0b3dd0';
+//   const p = sn.p, results = sn.results;
+//   let y = 0;
+
+//   /* ===== 1. 页头 ===== */
+//   const HH = 180;
+//   const g = ctx.createLinearGradient(0, 0, 0, HH);
+//   g.addColorStop(0, '#2F5496'); g.addColorStop(1, '#3b6cb5');
+//   ctx.fillStyle = g; ctx.fillRect(0, 0, W, HH);
+//   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+//   ctx.fillStyle = '#ffffff';
+//   ctx.font = `700 46px ${FONT_FAMILY}`;
+//   ctx.fillText('新能源项目环境效益计算表', X, 76);
+//   ctx.font = `400 22px ${FONT_FAMILY}`;
+//   ctx.fillStyle = '#d6e2f6';
+//   ctx.fillText('节能与污染物减排效益测算　·　参数可调，结果自动重算', X, 120);
+//   ctx.textAlign = 'right';
+//   ctx.font = `400 19px ${FONT_FAMILY}`;
+//   ctx.fillStyle = 'rgba(255,255,255,.9)';
+//   ctx.fillText(`生成日期 ${dateStr}`, W-X, 52);
+//   ctx.fillStyle = '#ffd98a';
+//   ctx.font = `600 19px ${FONT_FAMILY}`;
+//   ctx.fillText('V1.2 · 参数可调', W-X, 82);
+//   ctx.fillStyle = 'rgba(255,255,255,.9)';
+//   ctx.font = `400 19px ${FONT_FAMILY}`;
+//   ctx.fillText(`清晰度 ${scale}×（图片宽 ${W*scale} px）`, W-X, 112);
+//   ctx.fillStyle = 'rgba(255,255,255,.25)';        /* 页头底部细装饰线 */
+//   ctx.fillRect(X, HH-16, CW, 1);
+//   y = HH + 36;
+
+//   /* ===== 2. ① 输入参数 ===== */
+//   drawSectionTitle(ctx, X, X+CW, y, '① 输入参数', '年上网电量 E：唯一主输入（MWh）');
+//   y += 48;
+//   const colA = [330, 250, 130, CW-710];
+//   const rowsA = [{ bg:'#FFF3CD', cells:[
+//     { t:'年上网电量 E', bold:true },
+//     { t:fmtInt(p.E), bold:true, color:blue },
+//     { t:'MWh' },
+//     { t:'电站年发电量扣除厂用电后的上网电量（可调整）', color:gray }
+//   ]}];
+//   y = drawTable(ctx, X, y, colA, ['参数名称','当前数值','单位','说明'], rowsA) + 30;
+
+//   /* ===== 3. ② 减排 / 节能系数 ===== */
+//   drawSectionTitle(ctx, X, X+CW, y, '② 减排 / 节能系数', '系数均可手动调整，默认值为可研基准系数');
+//   y += 48;
+//   const colB = [410, 240, 140, CW-790];
+//   const rowsB = CFG.coefs.map(c => ({
+//     bg: (c.bg === 'b') ? '#e2efda' : '#eaf1fb',
+//     cells: [
+//       { t:c.label, bold:true },
+//       { t:trimNum(p.coefs[c.key]), bold:true, color:blue, fs:22 },
+//       { t:c.unit },
+//       { t:c.desc, color:gray, fs:19 }
+//     ]
+//   }));
+//   y = drawTable(ctx, X, y, colB, ['减排 / 节能指标','系数值','单位','说明'], rowsB) + 30;
+
+//   /* ===== 4. ③ 减排效益输出 ===== */
+//   drawSectionTitle(ctx, X, X+CW, y, '③ 减排效益输出', '结果 = 年上网电量 × 系数 ÷ 换算分母（10⁷ / 10⁶）');
+//   y += 48;
+//   const colC = [320, 250, 140, 300, CW-1010];
+//   const rowsC = results.map((x, i) => {
+//     const c = x.c;
+//     return { bg:(i%2) ? '#f4f8fd' : null, cells: [
+//       { t:c.label, bold:true },
+//       { t:x.disp, bold:true, color:'#1f3a6d', fs:25 },
+//       { t:c.resultUnit, color:'#5f6b7a' },
+//       { t:trimNum(x.full, 8), color:'#8593a6', fs:20 },
+//       { t:`${fmtInt(p.E)} MWh × ${trimNum(p.coefs[c.key])} ${c.unit} ÷ ${c.div===1e7 ? '10⁷' : '10⁶'}`,
+//         color:gray, fs:17.5 }
+//     ]};
+//   });
+//   y = drawTable(ctx, X, y, colC,
+//     ['指标','年减排 / 节约量','单位','全精度值','计算式'], rowsC, { rowH:56 }) + 34;
+
+//   /* ===== 5. ④ 成果描述（完整话术，自动换行） ===== */
+//   drawSectionTitle(ctx, X, X+CW, y, '④ 成果描述', '完整话术，数字随当前参数生成，可直接引用');
+//   y += 48;
+//   const inner = 34, fs = 27, lh = 50;
+//   ctx.font = `400 ${fs}px ${FONT_FAMILY}`;
+//   const lines = wrapText(ctx, sn.text, CW - inner*2);
+//   const boxH = lines.length*lh + inner;
+//   ctx.fillStyle = '#fffdf3';
+//   rr(ctx, X, y, CW, boxH, 14); ctx.fill();
+//   ctx.strokeStyle = '#e6d9a8'; ctx.lineWidth = 1.5;
+//   rr(ctx, X, y, CW, boxH, 14); ctx.stroke();
+//   ctx.fillStyle = '#26313f';
+//   ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+//   const ly0 = y + (boxH - lines.length*lh)/2;
+//   lines.forEach((ln, i) => { ctx.fillText(ln, X+inner, ly0 + i*lh + lh/2 + 1); });
+//   y += boxH + 36;
+
+//   /* ===== 6. 附：计算口径 ===== */
+//   ctx.strokeStyle = '#d5ddeb'; ctx.lineWidth = 1;
+//   ctx.beginPath(); ctx.moveTo(X, y); ctx.lineTo(X+CW, y); ctx.stroke();
+//   y += 30;
+//   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+//   ctx.font = `700 21px ${FONT_FAMILY}`;
+//   ctx.fillStyle = '#2F5496';
+//   ctx.fillText('附：计算口径与单位推导（可审计，与原 Excel 公式一致）', X, y);
+//   y += 34;
+//   ctx.font = `400 18px ${FONT_FAMILY}`;
+//   ctx.fillStyle = gray;
+//   const notes = [
+//     '· 节约标准煤（万吨）= E(MWh) × 煤耗(g/kWh) ÷ 10⁷；　CO₂（万吨）= E × CO₂系数(g/kWh) ÷ 10⁷',
+//     '· 碳粉尘 / SO₂ / NOₓ（吨）= E(MWh) × 系数(mg/kWh) ÷ 10⁶',
+//     '· 单位推导：1 MWh = 1000 kWh；1 MWh × 1 g/kWh = 1 kg；1 MWh × 1 mg/kWh = 1 g',
+//     '· 数据与《减排计算表.xlsx》一致；本图由网页工具一键生成，可插入报告或直接打印'
+//   ];
+//   notes.forEach(n => { ctx.fillText(n, X, y); y += 30; });
+//   return y + 26;    /* 图片底部留白 */
+// }
+
+// /* 生成高清 PNG：先小画布测高 → 建最终画布并按 scale 正式绘制 */
+// function renderReportImage(snapshot, scale, dateStr){
+//   const W = 1600, PAD = 72;
+//   const probe = document.createElement('canvas');
+//   probe.width = W; probe.height = 8;
+//   const totalH = Math.ceil(drawScene(probe.getContext('2d'), W, PAD, snapshot, scale, dateStr));
+//   const canvas = document.createElement('canvas');
+//   canvas.width  = W * scale;
+//   canvas.height = totalH * scale;
+//   const ctx = canvas.getContext('2d');
+//   ctx.scale(scale, scale);
+//   ctx.fillStyle = '#ffffff';                     /* 白底 */
+//   ctx.fillRect(0, 0, W, totalH);
+//   drawScene(ctx, W, PAD, snapshot, scale, dateStr);
+//   return { canvas, width: canvas.width, height: canvas.height };
+// }
+
+// /* ---------- 一键输出高清图片事件 ---------- */
+// $('btnImg').addEventListener('click', () => {
+//   const { errs, p } = validate();
+//   if (errs.length){
+//     alertBox.innerHTML = '<b>输入校验未通过，请先修正参数后再导出图片：</b><ul>' +
+//       errs.map(e => `<li>${e}</li>`).join('') + '</ul>';
+//     alertBox.classList.add('show');
+//     return;
+//   }
+//   const results = compute(p);
+//   const text    = buildParaText(p.E, p.coefs, results);
+//   const scale   = parseInt($('imgScale').value, 10) || 2;
+//   try{
+//     const { canvas, width, height } = renderReportImage(
+//       { p: { E:p.E, coefs:p.coefs }, results, text }, scale, nowStamp());
+//     const a = document.createElement('a');
+//     a.href = canvas.toDataURL('image/png');
+//     a.download = `新能源项目环境效益计算表_${fileStamp()}_${scale}x.png`;
+//     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+//     const m = $('imgMsg');
+//     m.textContent = `✔ 高清 PNG 已生成（${width} × ${height} px）并开始下载`;
+//     m.classList.add('show');
+//     setTimeout(() => { m.classList.remove('show'); m.textContent = ''; }, 5000);
+//   }catch(e){
+//     alertBox.innerHTML = `<b>生成图片失败：</b>${e.message}`;
+//     alertBox.classList.add('show');
+//   }
+// });
+
+
+
+/* ---------- 初始化：先建行 → 再绑事件 → 首次渲染 ---------- */
+buildCoefRows();
+CFG.coefs.forEach(c => inputs[c.key].addEventListener('input', render));
+render();
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "\u5207\u6362\u5230\u6697\u8272\u4e3b\u9898" : "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/新能源项目环境效益计算表.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>

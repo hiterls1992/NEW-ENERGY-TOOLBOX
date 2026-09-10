@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2000坐标与经纬度互转</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/2000坐标与经纬度互转.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/2000坐标与经纬度互转.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>2000坐标与经纬度互转<span class="badge">2000国家大地坐标系</span></h1>
+    <p>高斯-克吕格投影 · 自动识别带号与坐标方向 · 十进制 / 度分秒双格式</p>
+  </header>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" data-tab="single" onclick="switchTab('single')">单点转换</button>
+      <button class="tab" data-tab="batch" onclick="switchTab('batch')">批量转换</button>
+    </div>
+
+    <!-- ========== 单点转换 ========== -->
+    <div id="panel-single">
+      <div class="dir-toggle">
+        <button class="dir-btn active" id="dir-to-ll" onclick="switchDir('to-ll')">
+          平面坐标<span class="arrow">→</span>经纬度
+        </button>
+        <button class="dir-btn" id="dir-to-xy" onclick="switchDir('to-xy')">
+          经纬度<span class="arrow">→</span>平面坐标
+        </button>
+      </div>
+
+      <!-- 平面→经纬度 -->
+      <div id="form-to-ll">
+        <div class="field">
+          <label>坐标值 <span class="hint">（两个值填入任意顺序均可，程序按数值大小自动识别哪个是东坐标、哪个是北坐标）</span></label>
+          <div class="input-row">
+            <div class="input-group">
+              <div class="input-suffix"><input type="text" id="s-x" placeholder="如 38397196 或 397196"><span class="tag">值1</span></div>
+            </div>
+            <div class="input-group">
+              <div class="input-suffix"><input type="text" id="s-y" placeholder="如 4480735 或 4480735"><span class="tag">值2</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>中央子午线</label>
+          <div class="radio-row">
+            <label><input type="radio" name="s-meridian" value="auto" checked> 自动识别（带带号时）</label>
+            <label><input type="radio" name="s-meridian" value="manual"> 手动指定</label>
+          </div>
+          <div class="manual-row" id="s-manual" style="display:none">
+            <select id="s-zone" class="zone-sel" onchange="onZoneChange('s')"></select>
+            <input type="number" id="s-l0" placeholder="如 114" style="display:none">
+            <span class="tip" id="s-l0-unit" style="display:none">°E（自定义经度）</span>
+          </div>
+          <div class="tip">带带号坐标（如38397196，前两位38为带号）自动推算中央子午线38×3=114°；不带带号请手动选择3度带带号，或选"自定义经度"直接输入。</div>
+        </div>
+        <div class="field">
+          <label>输出列选择 <span class="hint">（勾选要显示的结果列，先十进制再度分秒）</span></label>
+          <div class="checkbox-row">
+            <label><input type="checkbox" id="s-out-lon-dec" checked> 经度（十进制）</label>
+            <label><input type="checkbox" id="s-out-lat-dec" checked> 纬度（十进制）</label>
+            <label><input type="checkbox" id="s-out-lon-dms" checked> 经度（度分秒）</label>
+            <label><input type="checkbox" id="s-out-lat-dms" checked> 纬度（度分秒）</label>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="convertSingle()">转 换</button>
+
+        <div class="result-box hidden" id="result-single"></div>
+      </div>
+
+      <!-- 经纬度→平面 -->
+      <div id="form-to-xy" style="display:none">
+        <div class="field">
+          <label>输入格式</label>
+          <div class="radio-row">
+            <label><input type="radio" name="ll-fmt" value="dec" checked onchange="toggleLLFmt()"> 十进制</label>
+            <label><input type="radio" name="ll-fmt" value="dms" onchange="toggleLLFmt()"> 度分秒</label>
+          </div>
+        </div>
+
+        <!-- 十进制输入 -->
+        <div id="ll-dec">
+          <div class="cols-2">
+            <div class="field">
+              <label>经度 <span class="hint">°E</span></label>
+              <input type="text" id="ll-dec-lon" placeholder="如 112.788055">
+            </div>
+            <div class="field">
+              <label>纬度 <span class="hint">°N</span></label>
+              <input type="text" id="ll-dec-lat" placeholder="如 40.454824">
+            </div>
+          </div>
+        </div>
+        <!-- 度分秒输入 -->
+        <div id="ll-dms" style="display:none">
+          <div class="cols-2">
+            <div class="field">
+              <label>经度（度分秒）</label>
+              <div class="dms-row">
+                <input type="number" id="lon-d" placeholder="112" style="flex:1"><span class="lbl">°</span>
+                <input type="number" id="lon-m" placeholder="47" style="flex:1"><span class="lbl">′</span>
+                <input type="number" id="lon-s" placeholder="16.9" style="flex:1.5"><span class="lbl">″</span>
+                <span class="lbl">E</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>纬度（度分秒）</label>
+              <div class="dms-row">
+                <input type="number" id="lat-d" placeholder="40" style="flex:1"><span class="lbl">°</span>
+                <input type="number" id="lat-m" placeholder="27" style="flex:1"><span class="lbl">′</span>
+                <input type="number" id="lat-s" placeholder="17.4" style="flex:1.5"><span class="lbl">″</span>
+                <span class="lbl">N</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>中央子午线 / 带号</label>
+          <div class="radio-row">
+            <label><input type="radio" name="xy-meridian" value="auto" checked> 自动选带</label>
+            <label><input type="radio" name="xy-meridian" value="zone"> 指定带号</label>
+            <label><input type="radio" name="xy-meridian" value="manual"> 指定经度</label>
+          </div>
+          <div class="manual-row" id="xy-zone-row" style="display:none">
+            <select id="xy-zone" class="zone-sel"></select>
+          </div>
+          <div class="manual-row" id="xy-l0-row" style="display:none">
+            <input type="number" id="xy-l0" placeholder="如 114"> <span class="tip" style="margin:0">°E</span>
+          </div>
+          <div class="tip">自动选带：根据经度自动计算3度带带号及中央子午线；指定带号可直接从下拉选择（我国3度带 24~45 带）。</div>
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="xy-zoned" checked style="width:auto;margin-right:6px">输出带带号的东坐标（前缀带号）</label>
+        </div>
+        <button class="btn btn-primary" onclick="convertSingleReverse()">转 换</button>
+
+        <div class="result-box hidden" id="result-single-rev"></div>
+      </div>
+    </div>
+
+    <!-- ========== 批量转换 ========== -->
+    <div id="panel-batch" style="display:none">
+      <div class="dir-toggle">
+        <button class="dir-btn active" id="b-dir-to-ll" onclick="switchBatchDir('to-ll')">平面坐标<span class="arrow">→</span>经纬度</button>
+        <button class="dir-btn" id="b-dir-to-xy" onclick="switchBatchDir('to-xy')">经纬度<span class="arrow">→</span>平面坐标</button>
+      </div>
+
+      <div id="b-form-to-ll">
+        <div class="field">
+          <label>粘贴数据 <span class="hint">（每行一组，用空格/制表符/逗号分隔，前两列为坐标值）</span></label>
+          <textarea id="b-data" placeholder="38397196 4480735&#10;38397213.678 4480727.678&#10;38397221 4480710&#10;..."></textarea>
+        </div>
+        <div class="field">
+          <label>中央子午线</label>
+          <div class="radio-row">
+            <label><input type="radio" name="b-meridian" value="auto" checked> 自动识别</label>
+            <label><input type="radio" name="b-meridian" value="manual"> 手动指定</label>
+          </div>
+          <div class="manual-row" id="b-manual" style="display:none">
+            <select id="b-zone" class="zone-sel" onchange="onZoneChange('b')"></select>
+            <input type="number" id="b-l0" placeholder="如 114" style="display:none">
+            <span class="tip" id="b-l0-unit" style="display:none">°E（自定义经度）</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>输出列选择 <span class="hint">（勾选要在结果表格和CSV中显示的列）</span></label>
+          <div class="checkbox-row">
+            <label><input type="checkbox" id="b-out-lon-dec" checked> 经度（十进制）</label>
+            <label><input type="checkbox" id="b-out-lat-dec" checked> 纬度（十进制）</label>
+            <label><input type="checkbox" id="b-out-lon-dms" checked> 经度（度分秒）</label>
+            <label><input type="checkbox" id="b-out-lat-dms" checked> 纬度（度分秒）</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="b-form-to-xy" style="display:none">
+        <div class="field">
+          <label>粘贴数据 <span class="hint">（每行一组，格式：经度 纬度，十进制，空格/制表符/逗号分隔）</span></label>
+          <textarea id="b-data-ll" placeholder="112.788055 40.454824&#10;112.788265 40.454760&#10;..."></textarea>
+        </div>
+        <div class="field">
+          <label>中央子午线 / 带号</label>
+          <div class="radio-row">
+            <label><input type="radio" name="b-xy-mer" value="auto" checked> 自动选带</label>
+            <label><input type="radio" name="b-xy-mer" value="zone"> 指定带号</label>
+            <label><input type="radio" name="b-xy-mer" value="manual"> 指定经度</label>
+          </div>
+          <div class="manual-row" id="bxy-zone-row" style="display:none">
+            <select id="b-xy-zone" class="zone-sel"></select>
+          </div>
+          <div class="manual-row" id="bxy-l0-row" style="display:none">
+            <input type="number" id="b-xy-l0" placeholder="如 114"> <span class="tip" style="margin:0">°E</span>
+          </div>
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="b-xy-zoned" checked style="width:auto;margin-right:6px">输出带带号的东坐标</label>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn btn-primary" onclick="convertBatch()">批量转换</button>
+        <button class="btn btn-ghost" onclick="loadSample()">载入示例</button>
+        <button class="btn btn-ghost" onclick="clearBatch()">清空</button>
+        <button class="btn btn-ghost" id="btn-export" onclick="exportCSV()" style="display:none">导出CSV</button>
+      </div>
+
+      <div class="result-box">
+        <div class="info-bar" id="b-info" style="display:none"></div>
+        <div class="result-table-wrap" id="b-table-wrap"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="footnote">
+      椭球参数：CGCS2000（a=6378137m, f=1/298.257222101）<br>
+      方向识别（按数值大小，不依赖X/Y标签）：值＞1000万=带带号东坐标｜100万~1000万=北坐标｜＜100万=不带带号东坐标<br>
+      注：测绘标准中 X=北坐标(南北)、Y=东坐标(东西)；但部分工程表格/CAD沿用数学约定 X=东、Y=北，两者相反，故本工具按数值自动判别方向<br>
+      所有计算在浏览器本地完成，不上传任何数据
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== CGCS2000 椭球参数 ====================
+const A=6378137.0, F=1/298.257222101;
+const E2=F*(2-F), EP2=E2/(1-E2);
+
+// 子午线弧长 M(B)
+function meridianArc(B){
+  const e2=E2, e4=e2*e2, e6=e4*e2;
+  const m0=A*(1-e2/4-3*e4/64-5*e6/256);
+  const m2=A*(3*e2/8+3*e4/32+45*e6/1024);
+  const m4=A*(15*e4/256+45*e6/1024);
+  const m6=A*(35*e6/3072);
+  return m0*B-m2*Math.sin(2*B)+m4*Math.sin(4*B)-m6*Math.sin(6*B);
+}
+
+// 底点纬度迭代
+function footPointLat(x){
+  const e2=E2, m0=A*(1-e2/4-3*e2*e2/64-5*e2*e2*e2/256);
+  let Bf=x/m0;
+  for(let i=0;i<30;i++) Bf=(x-(meridianArc(Bf)-m0*Bf))/m0;
+  return Bf;
+}
+
+// 高斯反算: (x北坐标, y距中央子午线m, L0°) -> {lat°, lon°}
+function gaussInverse(x,y,L0deg){
+  const L0=L0deg*Math.PI/180;
+  const Bf=footPointLat(x);
+  const sB=Math.sin(Bf),cB=Math.cos(Bf);
+  const Wf2=1-E2*sB*sB;
+  const Nf=A/Math.sqrt(Wf2);                    // 卯酉圈曲率半径
+  const Mf=A*(1-E2)/Math.pow(Wf2,1.5);          // 子午圈曲率半径
+  const tf=Math.tan(Bf), nf2=EP2*cB*cB;
+  const y2=y*y,y3=y2*y,y4=y2*y2,y5=y4*y,y6=y4*y2;
+  // 纬度 B (分母为 Mf·Nf 系列)
+  const B=Bf-tf*y2/(2*Mf*Nf)
+    +tf*(5+3*tf*tf+nf2-9*nf2*tf*tf)*y4/(24*Mf*Math.pow(Nf,3))
+    -tf*(61+90*tf*tf+45*tf*tf*tf*tf)*y6/(720*Mf*Math.pow(Nf,5));
+  // 经度 L (分母仅含 Nf 系列)
+  const L=L0+y/(Nf*cB)
+    -(1+2*tf*tf+nf2)*y3/(6*Nf*Nf*Nf*cB)
+    +(5+28*tf*tf+24*tf*tf*tf*tf+6*nf2+8*nf2*tf*tf)*y5/(120*Math.pow(Nf,5)*cB);
+  return {lat:B*180/Math.PI, lon:L*180/Math.PI};
+}
+
+// 高斯正算: (纬度°, 经度°, L0°) -> {x北坐标, y距中央子午线m}
+function gaussForward(latDeg,lonDeg,L0deg){
+  const B=latDeg*Math.PI/180;
+  const l=lonDeg*Math.PI/180-L0deg*Math.PI/180;
+  const sB=Math.sin(B),cB=Math.cos(B);
+  const N=A/Math.sqrt(1-E2*sB*sB);
+  const t=Math.tan(B), eta2=EP2*cB*cB;
+  const l2=l*l,l3=l2*l,l4=l2*l2,l5=l4*l,l6=l4*l2;
+  const X=meridianArc(B);
+  const x=X+N/2*sB*cB*l2
+    +N/24*sB*cB*cB*cB*(5-t*t+9*eta2)*l4
+    +N/720*sB*Math.pow(cB,5)*(61-58*t*t+t*t*t*t)*l6;
+  const y=N*cB*l
+    +N/6*cB*cB*cB*(1-t*t+eta2)*l3
+    +N/120*Math.pow(cB,5)*(5-18*t*t+t*t*t*t)*l5;
+  return {x:x,y:y};
+}
+
+// ==================== 度分秒转换 ====================
+function dec2dms(dec){
+  const sign=dec<0?-1:1;
+  dec=Math.abs(dec);
+  const d=Math.floor(dec+1e-9);
+  const m=Math.floor((dec-d)*60+1e-9);
+  const s=(dec-d-m/60)*3600;
+  return {d:d*sign, m:m, s:s};
+}
+function dms2dec(d,m,s){
+  const sign=d<0?-1:1;
+  return sign*(Math.abs(d)+m/60+s/3600);
+}
+function fmtDMS(o,suffix){
+  const dd=Math.abs(o.d), dm=o.m, ds=o.s;
+  return (o.d<0?'-':'')+dd+'°'+String(dm).padStart(2,'0')+'′'+ds.toFixed(3)+'″'+suffix;
+}
+
+// ==================== 坐标方向/带号识别 ====================
+function classifyVal(v){
+  const a=Math.abs(v);
+  if(a>=10000000) return 'E_zoned';   // 带带号东坐标
+  if(a>=1000000) return 'N';           // 北坐标(200万~600万)
+  return 'E_unzoned';                    // 不带带号东坐标
+}
+function identifyCoords(v1,v2){
+  const c1=classifyVal(v1), c2=classifyVal(v2);
+  if((c1==='E_zoned'||c1==='E_unzoned')&&c2==='N')
+    return {E:v1,N:v2,firstIsE:true};
+  if((c2==='E_zoned'||c2==='E_unzoned')&&c1==='N')
+    return {E:v2,N:v1,firstIsE:false};
+  return {E:null,N:null,error:'无法识别坐标方向，请检查输入值'};
+}
+function extractZone(E){
+  const sign=E<0?-1:1;
+  const a=Math.abs(E);
+  if(a>=10000000){
+    const zone=Math.floor(a/1000000);
+    return {hasZone:true,zone:zone,L0:zone*3,y:sign*(a-zone*1000000-500000)};
+  }
+  return {hasZone:false,zone:0,L0:null,y:sign*(a-500000)};
+}
+
+// ==================== 自动选带(经纬度→平面) ====================
+function autoZone(lon){
+  // 3度带带号 = round((lon+1.5)/3)
+  let zone=Math.round((lon+1.5)/3);
+  if(zone<1) zone=1;
+  return {zone:zone, L0:zone*3};
+}
+
+// ==================== UI 交互 ====================
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.getElementById('panel-single').style.display=t==='single'?'block':'none';
+  document.getElementById('panel-batch').style.display=t==='batch'?'block':'none';
+}
+function switchDir(d){
+  document.getElementById('dir-to-ll').classList.toggle('active',d==='to-ll');
+  document.getElementById('dir-to-xy').classList.toggle('active',d==='to-xy');
+  document.getElementById('form-to-ll').style.display=d==='to-ll'?'block':'none';
+  document.getElementById('form-to-xy').style.display=d==='to-xy'?'block':'none';
+}
+function switchBatchDir(d){
+  document.getElementById('b-dir-to-ll').classList.toggle('active',d==='to-ll');
+  document.getElementById('b-dir-to-xy').classList.toggle('active',d==='to-xy');
+  document.getElementById('b-form-to-ll').style.display=d==='to-ll'?'block':'none';
+  document.getElementById('b-form-to-xy').style.display=d==='to-xy'?'block':'none';
+}
+function toggleLLFmt(){
+  const v=document.querySelector('input[name="ll-fmt"]:checked').value;
+  document.getElementById('ll-dec').style.display=v==='dec'?'block':'none';
+  document.getElementById('ll-dms').style.display=v==='dms'?'block':'none';
+}
+
+// ==================== 中央子午线/带号 控件联动 ====================
+// 填充3度带标准带号下拉
+//   withCustom=true 时增加"自定义经度…"选项 (平面→经纬度手动指定用)
+function fillZoneOptions(selId, withCustom){
+  const sel=document.getElementById(selId);
+  if(!sel) return;
+  let html='';
+  for(let z=24;z<=45;z++){
+    html+=`<option value="${z}"${z===38?' selected':''}>${z}带（中央子午线 ${z*3}°E）</option>`;
+  }
+  if(withCustom) html+='<option value="custom">自定义经度…</option>';
+  sel.innerHTML=html;
+}
+// 平面→经纬度"手动指定"：选择带号 vs 自定义经度
+function onZoneChange(p){ // p='s'|'b'
+  const sel=document.getElementById(p+'-zone');
+  const inp=document.getElementById(p+'-l0');
+  const unit=document.getElementById(p+'-l0-unit');
+  const isCustom=sel.value==='custom';
+  inp.style.display=isCustom?'inline-block':'none';
+  unit.style.display=isCustom?'':'none';
+  if(!isCustom) inp.value='';
+}
+// 手动指定模式(单值) → 返回 L0; 无效返回 null
+function manualL0From(p){ // p='s'|'b' (对应 s-zone/s-l0)
+  const sel=document.getElementById(p+'-zone');
+  if(sel.value==='custom'){
+    const v=parseFloat(document.getElementById(p+'-l0').value);
+    return isNaN(v)?null:v;
+  }
+  const z=parseInt(sel.value,10);
+  return isNaN(z)||z<1?null:z*3;
+}
+// 指定带号模式(单值) → 返回 zone; 无效返回 null
+function manualZoneFrom(id){
+  const z=parseInt(document.getElementById(id).value,10);
+  return isNaN(z)||z<1?null:z;
+}
+
+// 初始化下拉选项（默认选中 38 带 = 114°E，符合示例场景）
+fillZoneOptions('s-zone',true);
+fillZoneOptions('b-zone',true);
+fillZoneOptions('xy-zone',false);
+fillZoneOptions('b-xy-zone',false);
+
+// radio 联动：s / b 面板 manual 与 auto 切换
+function syncSManual(){
+  const v=document.querySelector('input[name="s-meridian"]:checked').value;
+  document.getElementById('s-manual').style.display=v==='manual'?'flex':'none';
+  if(v==='manual') onZoneChange('s');
+}
+document.querySelectorAll('input[name="s-meridian"]').forEach(r=>r.addEventListener('change',syncSManual));
+function syncBManual(){
+  const v=document.querySelector('input[name="b-meridian"]:checked').value;
+  document.getElementById('b-manual').style.display=v==='manual'?'flex':'none';
+  if(v==='manual') onZoneChange('b');
+}
+document.querySelectorAll('input[name="b-meridian"]').forEach(r=>r.addEventListener('change',syncBManual));
+
+// radio 联动：xy / bxy 面板 auto-zone-manual 三态
+function syncXYManual(){
+  const v=document.querySelector('input[name="xy-meridian"]:checked').value;
+  document.getElementById('xy-zone-row').style.display=v==='zone'?'flex':'none';
+  document.getElementById('xy-l0-row').style.display=v==='manual'?'flex':'none';
+}
+document.querySelectorAll('input[name="xy-meridian"]').forEach(r=>r.addEventListener('change',syncXYManual));
+function syncBXYManual(){
+  const v=document.querySelector('input[name="b-xy-mer"]:checked').value;
+  document.getElementById('bxy-zone-row').style.display=v==='zone'?'flex':'none';
+  document.getElementById('bxy-l0-row').style.display=v==='manual'?'flex':'none';
+}
+document.querySelectorAll('input[name="b-xy-mer"]').forEach(r=>r.addEventListener('change',syncBXYManual));
+
+// ==================== 单点: 平面→经纬度 ====================
+function convertSingle(){
+  const box=document.getElementById('result-single');
+  const x=parseFloat(document.getElementById('s-x').value);
+  const y=parseFloat(document.getElementById('s-y').value);
+  if(isNaN(x)||isNaN(y)){box.innerHTML=infoBar('err','请输入有效的数字坐标');box.classList.remove('hidden');return;}
+
+  const id=identifyCoords(x,y);
+  if(id.error){box.innerHTML=infoBar('err',id.error);box.classList.remove('hidden');return;}
+
+  const zone=extractZone(id.E);
+  const merMode=document.querySelector('input[name="s-meridian"]:checked').value;
+  let L0, manualDesc='';
+  if(merMode==='auto'){
+    if(!zone.hasZone){box.innerHTML=infoBar('warn','坐标不带带号，请选择"手动指定"，从下拉选择带号或自定义经度');box.classList.remove('hidden');return;}
+    L0=zone.L0;
+  }else{
+    L0=manualL0From('s');
+    if(L0===null){box.innerHTML=infoBar('err','请从下拉框选择3度带带号，或选择"自定义经度"并输入数值');box.classList.remove('hidden');return;}
+    manualDesc=L0===Math.round(L0/3)*3?'（手动指定带号'+(L0/3)+'带）':'（手动指定经度）';
+  }
+
+  const yOff=zone.hasZone?zone.y:(id.E-500000);
+  const r=gaussInverse(id.N, yOff, L0);
+  const lonDMS=dec2dms(r.lon), latDMS=dec2dms(r.lat);
+
+  let info=`已识别：第${id.firstIsE?'1':'2'}个值为东坐标(E)，第${id.firstIsE?'2':'1'}个值为北坐标(N)`;
+  if(zone.hasZone) info+=`；带号${zone.zone}（3度带），中央子午线 ${L0}°E`;
+  else info+=`；不带带号，中央子午线 ${L0}°E ${manualDesc}`;
+
+  box.innerHTML=
+    infoBar('ok',info)+
+    buildResultCards(r.lon, r.lat, lonDMS, latDMS, 's');
+  box.classList.remove('hidden');
+}
+
+// ==================== 单点: 经纬度→平面 ====================
+function convertSingleReverse(){
+  const box=document.getElementById('result-single-rev');
+  let lon,lat;
+  const fmt=document.querySelector('input[name="ll-fmt"]:checked').value;
+  if(fmt==='dec'){
+    lon=parseFloat(document.getElementById('ll-dec-lon').value);
+    lat=parseFloat(document.getElementById('ll-dec-lat').value);
+  }else{
+    const d=parseFloat(document.getElementById('lon-d').value)||0;
+    const m=parseFloat(document.getElementById('lon-m').value)||0;
+    const s=parseFloat(document.getElementById('lon-s').value)||0;
+    lon=dms2dec(d,m,s);
+    const d2=parseFloat(document.getElementById('lat-d').value)||0;
+    const m2=parseFloat(document.getElementById('lat-m').value)||0;
+    const s2=parseFloat(document.getElementById('lat-s').value)||0;
+    lat=dms2dec(d2,m2,s2);
+  }
+  if(isNaN(lon)||isNaN(lat)){box.innerHTML=infoBar('err','请输入有效的经纬度');box.classList.remove('hidden');return;}
+
+  const merMode=document.querySelector('input[name="xy-meridian"]:checked').value;
+  let L0, zone;
+  if(merMode==='auto'){
+    const az=autoZone(lon); zone=az.zone; L0=az.L0;
+  }else if(merMode==='zone'){
+    zone=manualZoneFrom('xy-zone');
+    if(zone===null){box.innerHTML=infoBar('err','请从下拉框选择有效的3度带带号');box.classList.remove('hidden');return;}
+    L0=zone*3;
+  }else{
+    L0=parseFloat(document.getElementById('xy-l0').value);
+    if(isNaN(L0)){box.innerHTML=infoBar('err','请输入有效的中央子午线经度');box.classList.remove('hidden');return;}
+    zone=Math.round(L0/3);
+  }
+
+  const r=gaussForward(lat,lon,L0);
+  const zoned=document.getElementById('xy-zoned').checked;
+  const E_out=zoned?(zone*1000000+r.y+500000):r.y;
+  const N_out=r.x;
+
+  let info=`中央子午线 ${L0}°E`;
+  if(merMode==='auto') info+=`（自动选带：3度带${zone}带）`;
+  if(zoned) info+=`；东坐标已加带号${zone}前缀`;
+
+  box.innerHTML=
+    infoBar('ok',info)+
+    `<div class="cols-2">
+      <div class="result-card">
+        <div class="r-label">东坐标 (E) ${copyBtn('东坐标',E_out.toFixed(3))}</div>
+        <div class="r-value">${E_out.toFixed(3)}</div>
+        <div class="r-dms">北坐标 N = ${N_out.toFixed(3)} m</div>
+      </div>
+      <div class="result-card">
+        <div class="r-label">北坐标 (N) ${copyBtn('北坐标',N_out.toFixed(3))}</div>
+        <div class="r-value">${N_out.toFixed(3)}</div>
+        <div class="r-dms">东坐标 E = ${E_out.toFixed(3)} m</div>
+      </div>
+    </div>`;
+  box.classList.remove('hidden');
+}
+
+// ==================== 批量转换 ====================
+let batchResults=[];
+function parseLines(txt){
+  return txt.trim().split('\n').map(l=>l.trim()).filter(l=>l.length>0)
+    .map(l=>l.split(/[\s,，\t]+/).filter(s=>s.length>0));
+}
+function convertBatch(){
+  const wrap=document.getElementById('b-table-wrap');
+  const info=document.getElementById('b-info');
+  const dir=document.getElementById('b-dir-to-ll').classList.contains('active')?'to-ll':'to-xy';
+  let rows;
+  if(dir==='to-ll'){
+    rows=parseLines(document.getElementById('b-data').value);
+    if(!rows.length){info.style.display='flex';info.className='info-bar err';info.innerHTML=icon('⚠')+'请粘贴数据';wrap.innerHTML='';return;}
+    const merMode=document.querySelector('input[name="b-meridian"]:checked').value;
+    let manualL0=null;
+    if(merMode==='manual'){manualL0=manualL0From('b');}
+    if(merMode==='manual'&&manualL0===null){info.style.display='flex';info.className='info-bar err';info.innerHTML=icon('⚠')+'请从下拉框选择带号，或选"自定义经度"并输入数值';wrap.innerHTML='';return;}
+
+    batchResults=[];
+    let ok=0,fail=0,zones=new Set();
+    rows.forEach((r,i)=>{
+      if(r.length<2){batchResults.push({i:i+1,err:'数据不足'});fail++;return;}
+      const v1=parseFloat(r[0]), v2=parseFloat(r[1]);
+      if(isNaN(v1)||isNaN(v2)){batchResults.push({i:i+1,err:'非数字'});fail++;return;}
+      const id=identifyCoords(v1,v2);
+      if(id.error){batchResults.push({i:i+1,err:id.error});fail++;return;}
+      const zone=extractZone(id.E);
+      let L0;
+      if(merMode==='manual'){L0=manualL0;}
+      else if(zone.hasZone){L0=zone.L0;zones.add(zone.zone);}
+      else{batchResults.push({i:i+1,v1:v1,v2:v2,err:'不带带号需手动指定中央子午线'});fail++;return;}
+      const yOff=zone.hasZone?zone.y:(id.E-500000);
+      const res=gaussInverse(id.N,yOff,L0);
+      batchResults.push({i:i+1,v1:v1,v2:v2,lon:res.lon,lat:res.lat,zone:zone.zone,L0:L0,firstIsE:id.firstIsE});
+      ok++;
+    });
+    renderBatchTable(dir);
+    let msg=icon('✓')+`共 ${rows.length} 行，成功 ${ok}`;
+    if(fail) msg+=`，失败 ${fail}`;
+    if(zones.size) msg+=`；识别带号：${[...zones].join(', ')}`;
+    info.style.display='flex';info.className='info-bar '+(fail?'warn':'ok');info.innerHTML=msg;
+  }else{
+    rows=parseLines(document.getElementById('b-data-ll').value);
+    if(!rows.length){info.style.display='flex';info.className='info-bar err';info.innerHTML=icon('⚠')+'请粘贴数据';wrap.innerHTML='';return;}
+    const merMode=document.querySelector('input[name="b-xy-mer"]:checked').value;
+    let manualL0=null, manualZone=null;
+    if(merMode==='manual'){manualL0=parseFloat(document.getElementById('b-xy-l0').value);}
+    if(merMode==='zone'){manualZone=manualZoneFrom('b-xy-zone');}
+    if((merMode==='manual'&&isNaN(manualL0))||(merMode==='zone'&&manualZone===null)){info.style.display='flex';info.className='info-bar err';info.innerHTML=icon('⚠')+(merMode==='manual'?'请输入有效的中央子午线经度':'请从下拉框选择有效的带号');wrap.innerHTML='';return;}
+    const zoned=document.getElementById('b-xy-zoned').checked;
+
+    batchResults=[];
+    let ok=0,fail=0;
+    rows.forEach((r,i)=>{
+      if(r.length<2){batchResults.push({i:i+1,err:'数据不足'});fail++;return;}
+      const lon=parseFloat(r[0]), lat=parseFloat(r[1]);
+      if(isNaN(lon)||isNaN(lat)){batchResults.push({i:i+1,err:'非数字'});fail++;return;}
+      let L0,zone;
+      if(merMode==='manual'){L0=manualL0;zone=Math.round(L0/3);}
+      else if(merMode==='zone'){L0=manualZone*3;zone=manualZone;}
+      else{const az=autoZone(lon);zone=az.zone;L0=az.L0;}
+      const res=gaussForward(lat,lon,L0);
+      const E_out=zoned?(zone*1000000+res.y+500000):res.y;
+      batchResults.push({i:i+1,lon:lon,lat:lat,E:E_out,N:res.x,zone:zone,L0:L0});
+      ok++;
+    });
+    renderBatchTable(dir);
+    info.style.display='flex';
+    info.className='info-bar '+(fail?'warn':'ok');
+    info.innerHTML=icon('✓')+`共 ${rows.length} 行，成功 ${ok}`+(fail?`，失败 ${fail}`:'');
+  }
+  document.getElementById('btn-export').style.display=batchResults.length?'inline-block':'none';
+}
+
+function renderBatchTable(dir){
+  const wrap=document.getElementById('b-table-wrap');
+  if(!batchResults.length){wrap.innerHTML='';return;}
+  let html='<table><thead><tr><th>#</th>';
+  let cols=[];
+  if(dir==='to-ll'){
+    const c=getOutputCols('b');
+    html+='<th>输入值1</th><th>输入值2</th>';
+    if(c.lonDec){html+='<th>经度(°)</th>';cols.push('lonDec');}
+    if(c.latDec){html+='<th>纬度(°)</th>';cols.push('latDec');}
+    if(c.lonDms){html+='<th>经度(度分秒)</th>';cols.push('lonDms');}
+    if(c.latDms){html+='<th>纬度(度分秒)</th>';cols.push('latDms');}
+    html+='<th>带号</th><th>中央子午线</th>';
+  }else{
+    html+='<th>经度(°)</th><th>纬度(°)</th><th>东坐标(E)</th><th>北坐标(N)</th><th>带号</th><th>中央子午线</th>';
+  }
+  html+='<th>状态</th></tr></thead><tbody>';
+  batchResults.forEach(r=>{
+    html+='<tr>';
+    if(r.err){
+      html+=`<td>${r.i}</td><td colspan="10" style="color:var(--red)">⚠ ${r.err}</td>`;
+    }else if(dir==='to-ll'){
+      const lonDMS=fmtDMS(dec2dms(r.lon),'E'), latDMS=fmtDMS(dec2dms(r.lat),'N');
+      html+=`<td>${r.i}</td><td class="num">${r.v1}</td><td class="num">${r.v2}</td>`;
+      cols.forEach(col=>{
+        if(col==='lonDec') html+=`<td class="num">${r.lon.toFixed(7)}</td>`;
+        if(col==='latDec') html+=`<td class="num">${r.lat.toFixed(7)}</td>`;
+        if(col==='lonDms') html+=`<td>${lonDMS}</td>`;
+        if(col==='latDms') html+=`<td>${latDMS}</td>`;
+      });
+      html+=`<td>${r.zone||'-'}</td><td>${r.L0}°E</td><td style="color:var(--green)">✓</td>`;
+    }else{
+      html+=`<td>${r.i}</td><td class="num">${r.lon}</td><td class="num">${r.lat}</td><td class="num">${r.E.toFixed(3)}</td><td class="num">${r.N.toFixed(3)}</td><td>${r.zone}</td><td>${r.L0}°E</td><td style="color:var(--green)">✓</td>`;
+    }
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+function exportCSV(){
+  if(!batchResults.length)return;
+  const dir=document.getElementById('b-dir-to-ll').classList.contains('active')?'to-ll':'to-xy';
+  let headers, lines=[];
+  if(dir==='to-ll'){
+    const c=getOutputCols('b');
+    headers=['序号','输入值1','输入值2'];
+    if(c.lonDec) headers.push('经度(度)');
+    if(c.latDec) headers.push('纬度(度)');
+    if(c.lonDms) headers.push('经度(度分秒)');
+    if(c.latDms) headers.push('纬度(度分秒)');
+    headers.push('带号','中央子午线','状态');
+    batchResults.forEach(r=>{
+      if(r.err){lines.push([r.i,'','',r.err]);}
+      else{
+        const row=[r.i,r.v1,r.v2];
+        if(c.lonDec) row.push(r.lon.toFixed(7));
+        if(c.latDec) row.push(r.lat.toFixed(7));
+        if(c.lonDms) row.push(fmtDMS(dec2dms(r.lon),'E'));
+        if(c.latDms) row.push(fmtDMS(dec2dms(r.lat),'N'));
+        row.push(r.zone||'',r.L0+'°E','成功');
+        lines.push(row);
+      }
+    });
+  }else{
+    headers=['序号','经度(度)','纬度(度)','东坐标(E)','北坐标(N)','带号','中央子午线','状态'];
+    batchResults.forEach(r=>{
+      if(r.err) lines.push([r.i,'','','','','','',r.err]);
+      else lines.push([r.i,r.lon,r.lat,r.E.toFixed(3),r.N.toFixed(3),r.zone,r.L0+'°E','成功']);
+    });
+  }
+  const csv='\uFEFF'+[headers,...lines].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='坐标转换结果.csv';
+  a.click();
+}
+
+function loadSample(){
+  document.getElementById('b-data').value=
+`38397196 4480735
+38397213.678 4480727.678
+38397221 4480710
+38397213.678 4480692.322
+38397196 4480685
+38394755 4477837
+38394772.678 4477829.678
+38394780 4477812`;
+  document.querySelector('input[name="b-meridian"][value="auto"]').checked=true;
+  syncBManual();
+  convertBatch();
+}
+function clearBatch(){
+  document.getElementById('b-data').value='';
+  document.getElementById('b-data-ll').value='';
+  document.getElementById('b-table-wrap').innerHTML='';
+  document.getElementById('b-info').style.display='none';
+  document.getElementById('btn-export').style.display='none';
+  batchResults=[];
+}
+
+// ==================== 辅助函数 ====================
+function infoBar(type,msg){return `<div class="info-bar ${type}">${icon(type==='ok'?'✓':type==='warn'?'⚠':'✗')} ${msg}</div>`;}
+function icon(emoji){return `<span class="icon">${emoji}</span>`;}
+function copyBtn(label,text){return `<button class="copy-btn" onclick="copyText('${text.replace(/'/g,"\\'")}')">复制</button>`;}
+function copyText(t){navigator.clipboard.writeText(t).then(()=>{}).catch(()=>{});}
+// 字符串转义(嵌入onclick属性)
+function qs(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+// 整体复制并给出按钮反馈
+function doCopy(t,btn){
+  navigator.clipboard.writeText(t).then(()=>{
+    if(btn){const old=btn.innerHTML;btn.innerHTML='✓ 已复制';btn.classList.add('copied');
+      setTimeout(()=>{btn.innerHTML=old;btn.classList.remove('copied');},1400);}
+  }).catch(()=>{});
+}
+
+// 获取输出列勾选状态 (prefix: 's' 单点, 'b' 批量)
+function getOutputCols(prefix){
+  return {
+    lonDec:document.getElementById(prefix+'-out-lon-dec').checked,
+    latDec:document.getElementById(prefix+'-out-lat-dec').checked,
+    lonDms:document.getElementById(prefix+'-out-lon-dms').checked,
+    latDms:document.getElementById(prefix+'-out-lat-dms').checked
+  };
+}
+
+// 构建单点结果卡片: 顶部整体复制(经度,纬度), 下方为所选格式卡片
+function buildResultCards(lon, lat, lonDMS, latDMS, prefix){
+  const c=getOutputCols(prefix);
+  // 整体复制内容: 经度在前, 纬度在后, 英文逗号分隔
+  const decStr=lon.toFixed(7)+','+lat.toFixed(7);
+  const dmsStr=fmtDMS(lonDMS,'E')+','+fmtDMS(latDMS,'N');
+  let cards='';
+  if(c.lonDec) cards+=card('经度（十进制）',lon.toFixed(7)+'°E');
+  if(c.latDec) cards+=card('纬度（十进制）',lat.toFixed(7)+'°N');
+  if(c.lonDms) cards+=card('经度（度分秒）',fmtDMS(lonDMS,'E'));
+  if(c.latDms) cards+=card('纬度（度分秒）',fmtDMS(latDMS,'N'));
+  if(!cards) return infoBar('warn','请至少勾选一个输出列');
+  // 复制按钮上的预览文案
+  const prevDec=decStr.length>34?decStr.slice(0,34)+'…':decStr;
+  const prevDms=dmsStr.length>34?dmsStr.slice(0,34)+'…':dmsStr;
+  const grp=`<div class="copy-group">
+    <span class="cg-label">整体复制（经度,纬度）</span>
+    <button class="copy-tag primary" onclick="doCopy('${qs(decStr)}',this)">复制十进制<span class="ct-prev">${prevDec}</span></button>
+    <button class="copy-tag secondary" onclick="doCopy('${qs(dmsStr)}',this)">复制度分秒<span class="ct-prev">${prevDms}</span></button>
+  </div>`;
+  return grp+`<div class="result-cols">${cards}</div>`;
+}
+function card(label,value){
+  return `<div class="result-card"><div class="r-label">${label}</div><div class="r-value">${value}</div></div>`;
+}
+
+// 初始化默认示例值（单点）
+document.getElementById('s-x').value='38397196';
+document.getElementById('s-y').value='4480735';
+
+// 勾选框变化时自动刷新已显示的结果
+['s-out-lon-dec','s-out-lat-dec','s-out-lon-dms','s-out-lat-dms'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{
+    const box=document.getElementById('result-single');
+    if(!box.classList.contains('hidden') && !box.querySelector('.info-bar.err') && !box.querySelector('.info-bar.warn'))
+      convertSingle();
+  });
+});
+['b-out-lon-dec','b-out-lat-dec','b-out-lon-dms','b-out-lat-dms'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{
+    if(batchResults.length){
+      const dir=document.getElementById('b-dir-to-ll').classList.contains('active')?'to-ll':'to-xy';
+      renderBatchTable(dir);
+    }
+  });
+});
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "\u5207\u6362\u5230\u6697\u8272\u4e3b\u9898" : "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/2000坐标与经纬度互转.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>

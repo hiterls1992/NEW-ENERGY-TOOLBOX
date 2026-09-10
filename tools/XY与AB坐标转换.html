@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="8Hj1jYwTKpszwRbpSApi3K">
+<head data-page-node-id="u2XaVactg1j2FyR3rwxa9s">
+<meta charset="UTF-8" data-page-node-id="iI4Fuj9w8VDPQmipRD9RZs">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="1F9sB2wkWQwZuOdIS9RxS1">
+<title>XY与AB坐标转换</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/XY与AB坐标转换.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/XY与AB坐标转换.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-page-node-id="swo51wxsUx8e0EBGu2eiKs">
+<div class="wrap" data-page-node-id="8jEDP4zwt3yljTcTqp3eGb">
+
+  <header data-page-node-id="WPhp8YbQQa4XCvcmCvOtyr">
+    <h1 data-page-node-id="67vNEhilPy9MjweTOQXLCr">XY与AB坐标转换</h1>
+    <p data-page-node-id="UjDMxkrUvB4qDOg3mIKA4q">基于两组已知对照点，求解平面坐标变换参数（平移 + 旋转 + 比例），实现两坐标系互转</p>
+  </header>
+
+  <!-- ============ 一、对照点输入 ============ -->
+  <div class="card" data-page-node-id="jMaC4eIey2EfSudrfM0KY8">
+    <h2 data-page-node-id="j76FkZeQpCPEMeWv1Ku6ay"><span class="badge" data-page-node-id="6p98pGdCGtv01sorf5dR6D">1</span>已知对照点输入</h2>
+    <p class="desc" data-page-node-id="X8CMfYAH3qEN9Gq3fwRTuM">输入同一物理点在两套坐标系下的坐标。要求两个点不重合，且各自坐标系内坐标不同。</p>
+
+    <table class="ipt" data-page-node-id="38TEaQ1LDOqegeasAmaL3b">
+      <thead data-page-node-id="0bVTBA00NzJtPixBKfNaQa">
+        <tr data-page-node-id="HQeXcIwcr6Jy7MIelxuGtc">
+          <th style="width:120px;text-align:left;" data-page-node-id="1i4MxpXIrokEUEyHiyC00k">点号</th>
+          <th data-page-node-id="eycHzRWc4UdPhdKP6GyGIL">X（CGCS2000，m）</th>
+          <th data-page-node-id="1wUQUk8Csgpx4kcVPWX3Hq">Y（CGCS2000，m）</th>
+          <th data-page-node-id="fdTVWdQnMaEghtH05UGmCP">A（局部坐标）</th>
+          <th data-page-node-id="gPcVHt74EjCNFzcLyPK427">B（局部坐标）</th>
+        </tr>
+      </thead>
+      <tbody data-page-node-id="ZElKBYefPMzSnNj0JpBTrR">
+        <tr data-page-node-id="WUweoqK14wLgQGzYFjqm15">
+          <td class="rowname" data-page-node-id="lpH3vM73Zlyh0ITNjeDy3b">点 1</td>
+          <td data-page-node-id="jJfXoGHFAZbg7Z4Aa77STd"><input type="text" id="X1" value="4150195.841" inputmode="decimal" data-page-node-id="n0tTEYNzrAwgMQElXxYdcO"></td>
+          <td data-page-node-id="CWauCsQdvSIIcWLOjbXvCM"><input type="text" id="Y1" value="592925.136" inputmode="decimal" data-page-node-id="e8SveDY8T7HakqxhwedIld"></td>
+          <td data-page-node-id="JDxEivRCEokUoJ72EX9mkE"><input type="text" id="A1" value="0" inputmode="decimal" data-page-node-id="WcgyGXol5ZfJXITcM0TW1T"></td>
+          <td data-page-node-id="MS3ontYE4knNLL5Lm9s0Pe"><input type="text" id="B1" value="0" inputmode="decimal" data-page-node-id="bIy6qYA3hegQaSjGZchb6P"></td>
+        </tr>
+        <tr data-page-node-id="lqnhbJ0yETzADxdGbuD321">
+          <td class="rowname" data-page-node-id="FSJ4CKmyOekIcLgQ8i1AFL">点 2</td>
+          <td data-page-node-id="MzDTOZnqTwDW2dbias8Jc6"><input type="text" id="X2" value="4150469.221" inputmode="decimal" data-page-node-id="mGeJd5gIHQgzyDT2vFeyRN"></td>
+          <td data-page-node-id="vdBEiKxXqjqswMDrnGRxOc"><input type="text" id="Y2" value="592981.811" inputmode="decimal" data-page-node-id="964HuvbqJe5nKqysSIXCk8"></td>
+          <td data-page-node-id="G0BmW2tAcR6EhTLLQnVifW"><input type="text" id="A2" value="259.5" inputmode="decimal" data-page-node-id="a6qbkLD1V0VVqeLgA3QUB3"></td>
+          <td data-page-node-id="HzTwkmDpre01yd9DxXv1iU"><input type="text" id="B2" value="103" inputmode="decimal" data-page-node-id="i5VZxe4xoXVFZbxGeqdEFE"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="opt-row" data-page-node-id="SH3SyRrqfxx3e8SafoCjAT">
+      <label class="chk" title="勾选后比例因子固定为 1，按纯刚体变换（平移 + 旋转）对两对照点做最小二乘最优拟合；不勾选则按四参数解算比例" data-page-node-id="TTqFdnDw0oOvYo3EDhXfLk">
+        <input type="checkbox" id="fixK1" data-page-node-id="ucFvspqMxn0NsjZFN2G5GX"> 比例因子 k 固定为 1（按平移 + 旋转的纯刚体变换拟合，不缩放）
+      </label>
+    </div>
+
+    <div class="btn-row" data-page-node-id="g7c97DIg1vfURBvFPSAxez">
+      <button class="btn btn-primary" id="btnCalc" data-page-node-id="oGbCyIq5OmYss9AwM9PFoj">计算变换参数</button>
+      <button class="btn btn-ghost" id="btnExample" data-page-node-id="xzxlzgsa0VrzTTNk4DlG8C">填入示例数据</button>
+      <button class="btn btn-ghost" id="btnClear" data-page-node-id="9KNGFnw8brJgNtH32gRJ9Y">清空</button>
+    </div>
+    <div class="msg" id="inputMsg" data-page-node-id="NOxJrHKM1WfiuMmfjGWHtA"></div>
+  </div>
+
+  <!-- ============ 二、变换参数 ============ -->
+  <div class="card" id="paramCard" style="display:none;" data-page-node-id="Q4oUTJroAERJAiXFKU1j4H">
+    <h2 data-page-node-id="3ToQXgdgcEHyIe7f4xqBgT"><span class="badge" data-page-node-id="m1Lzgx0jk5hbUiq9Vei5SE">2</span>变换参数结果</h2>
+    <p class="desc" data-page-node-id="qgKcVMmvLsWV9ziK0P0hkm">由两组对照点解算得到的平面相似变换参数（四参数）。</p>
+
+    <div class="params" data-page-node-id="vv5qYGeEfBFi3RdFD4Hxtm">
+      <div class="p-item" data-page-node-id="XI2lAm7wg1LbyEk8wXZsvM">
+        <div class="lab" data-page-node-id="BnbpDXW1QVSpHGs0HG2lOQ">平移量 X₀</div>
+        <div class="val" id="pX0" data-page-node-id="DVWc8UaBqaZyStF2rHQcIk">—</div>
+        <div class="note" data-page-node-id="mywSBrA6JLBamnIGlGq4zd">平移量（AB 系坐标原点在 XY 系中的位置）</div>
+      </div>
+      <div class="p-item" data-page-node-id="ZgT7XBEVvilJTl0ZeZkovc">
+        <div class="lab" data-page-node-id="FWLFHcCXZ39nZaIWEuuxLf">平移量 Y₀</div>
+        <div class="val" id="pY0" data-page-node-id="2FDAcLQykRCS41Rz1xqNZF">—</div>
+        <div class="note" data-page-node-id="4QfjA5INV78l7zUi1mYOqG">平移量（AB 系坐标原点在 XY 系中的位置）</div>
+      </div>
+      <div class="p-item" data-page-node-id="U6Qa3G6aLCUUt1fZjO0Vui">
+        <div class="lab" data-page-node-id="Xc7Akdc4ZKczKuzNhAdmsk">旋转角 θ（AB → XY）</div>
+        <div class="val small" id="pTheta" data-page-node-id="QAScVDbBDTvDeP7SMEmket">—</div>
+        <div class="note" id="pThetaNote" data-page-node-id="Luwc4Q6Rf6BPaAIlTGo9wE">逆时针为正</div>
+      </div>
+      <div class="p-item" data-page-node-id="qN2QgoAXKAt9KxfUydHECI">
+        <div class="lab" data-page-node-id="YBWWf4huNLoDcXIqiP2Sfe">比例因子 k</div>
+        <div class="val" id="pK" data-page-node-id="LcpQKBg6m6iTpjAR75ENL3">—</div>
+        <div class="note" id="pKNote" data-page-node-id="jBnBfiYpxb2YstvSK3Acc8"></div>
+      </div>
+    </div>
+
+    <div class="formula-box" data-page-node-id="Oo1eIOGKSVVXAQZpLssrb1">
+      <h3 data-page-node-id="97DybV1TNZqJ1harN8AhvJ">变换公式（平移距离 + 旋转角度三角函数）</h3>
+      <div class="formula" data-page-node-id="jNWUjl4DDJG1kz9nLW3uPs">
+        <span class="dir" data-page-node-id="GaEsdqXtznC6slx3BSI1Vb">AB → XY：</span><br data-page-node-id="lRHkCSm8SowEfTnLeksrpu">
+        X = X₀ + k·(A·cosθ − B·sinθ)<br data-page-node-id="etFJaA2Ce5A0PtuNUTzfu8">
+        Y = Y₀ + k·(A·sinθ + B·cosθ)<br data-page-node-id="EQe6XM4AJtXGIltPBaNdlZ"><br data-page-node-id="ETuvhegRkMN5bxIt7K3eRi">
+        <span class="dir" data-page-node-id="DGSrFEkvJDIFcfYeVKpNOr">XY → AB：</span><br data-page-node-id="L3uNpoHTP08y7CYiTrhFGF">
+        A = [(X−X₀)·cosθ + (Y−Y₀)·sinθ] / k<br data-page-node-id="CF6GfsHCCMj5XlEFHqBGpE">
+        B = [−(X−X₀)·sinθ + (Y−Y₀)·cosθ] / k
+      </div>
+    </div>
+
+    <div class="msg warn" id="verifyMsg" data-page-node-id="exYpcCk8gYPqaRAffinqgh"></div>
+  </div>
+
+  <!-- ============ 三、坐标互转 ============ -->
+  <div class="card" id="convertCard" style="display:none;" data-page-node-id="FpzY54ygDUzsRRJkLXNL6N">
+    <h2 data-page-node-id="fCph4mQiI0BLgk1Lhht4T1"><span class="badge" data-page-node-id="HBt5WvIS7iaCmQ5zQI0ZuH">3</span>坐标互转</h2>
+    <p class="desc" data-page-node-id="v1XpyhBIglbkmN9JEPL9qC">输入任一坐标，转换为另一坐标系下的对应坐标。</p>
+
+    <div class="convert-grid" data-page-node-id="6XgAWzc33dto1xaJYkeSWT">
+      <!-- AB -> XY -->
+      <div class="conv-card" data-page-node-id="GjVT5l2UX4P1uLOWGEWmdD">
+        <h3 data-page-node-id="BW186YbTUi8XIHetpp3Maa">AB → XY <span data-page-node-id="aLFwQMlnnUOgkczrMRhX5K">（A、B 输入 → X、Y 输出）</span></h3>
+        <div class="field" data-page-node-id="7I08rUktZcSzoQTAAIJaif">
+          <label for="inA" data-page-node-id="uScEP7EgUWkh4YT4FLrrSy">A =</label>
+          <input type="text" id="inA" placeholder="输入 A 坐标" inputmode="decimal" data-page-node-id="1HdkGmzcJwxwztLL8Fzge6">
+        </div>
+        <div class="field" data-page-node-id="Iy3oYOMABSCGWzAYd4EVZk">
+          <label for="inB" data-page-node-id="yvNiTqRD9260oPznEBYdXt">B =</label>
+          <input type="text" id="inB" placeholder="输入 B 坐标" inputmode="decimal" data-page-node-id="gzCaM8W4xIiRqRdbBWjJVb">
+        </div>
+        <button class="btn btn-primary" id="btnAB2XY" data-page-node-id="5TWuKE5cUvuMjEaLKxXgbZ">转换</button>
+        <div class="result" id="resAB2XY" data-page-node-id="ASS3jPfIw8EzELKgdJJvBb"></div>
+      </div>
+
+      <!-- XY -> AB -->
+      <div class="conv-card" data-page-node-id="n9cUHDf9ok6cQwDWmS2KME">
+        <h3 data-page-node-id="E3qtHnq3Gawzk04DxB6KP2">XY → AB <span data-page-node-id="Z0JTpwdHIJD5iMpnbLSiXg">（X、Y 输入 → A、B 输出）</span></h3>
+        <div class="field" data-page-node-id="GAPRPHLcye9HaIaVKDxjn3">
+          <label for="inX" data-page-node-id="DAAcKIEs7VwIyTLthWVynj">X =</label>
+          <input type="text" id="inX" placeholder="输入 X 坐标" inputmode="decimal" data-page-node-id="sGag2mV7qABbmjVGxPHRTQ">
+        </div>
+        <div class="field" data-page-node-id="yWi1hWQTagDo7oNskXE2wI">
+          <label for="inY" data-page-node-id="wu7ib7qLCRvEc0gTF6YYSo">Y =</label>
+          <input type="text" id="inY" placeholder="输入 Y 坐标" inputmode="decimal" data-page-node-id="HbODhu3QDtXY2NvoEedhXV">
+        </div>
+        <button class="btn btn-primary" id="btnXY2AB" data-page-node-id="6iFDGhdYwsI12Zd44Il7g2">转换</button>
+        <div class="result" id="resXY2AB" data-page-node-id="SVxECCL5HAWCv4azZM0lVq"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 四、批量转换 ============ -->
+  <div class="card" id="batchCard" style="display:none;" data-page-node-id="IRiRm0SCiUEbVhkuPiCNs2">
+    <h2 data-page-node-id="jNmAo36XWP8rqe0hpRVduT"><span class="badge" data-page-node-id="qNK8f2cnuOhnDXbiMHM4lo">4</span>多坐标批量转换</h2>
+    <p class="desc" data-page-node-id="1kjkVPGXR9c7OT5FOHB9Ps">一次输入多行坐标批量转换。每行一个点，列用逗号、分号、制表符或空格分隔；可含点号（首列），也可只写两列坐标。空行与以 <span class="kbd" data-page-node-id="840PtqrcWTIlCH602msZOi">#</span> 开头的行将被忽略。</p>
+
+    <div class="batch-toolbar" data-page-node-id="qGXk2xfMflEiJ9LnR9YFwY">
+      转换方向：
+      <label data-page-node-id="CbNBmZAoYGGdoANKoyfBeT"><input type="radio" name="batchDir" value="ab2xy" checked data-page-node-id="byuYsVso59DJBdrYihexAo"> AB → XY</label>
+      <label data-page-node-id="FstazlpnjpXW7xEtPJxfWM"><input type="radio" name="batchDir" value="xy2ab" data-page-node-id="LF3hOT4cAozyDMOyjb3snr"> XY → AB</label>
+    </div>
+
+    <textarea id="batchInput" placeholder="示例（AB → XY）：&#10;# 点号,A,B&#10;1,0,0&#10;2,55,103"></textarea>
+    <p class="batch-hint" id="batchHint" data-page-node-id="gALcaz72KxYopoFiCPwrJ7"></p>
+
+    <div class="btn-row" data-page-node-id="AiyHV91PCA5VdCcfFCs5O0">
+      <button class="btn btn-primary" id="btnBatch" data-page-node-id="SVfsMGbYVuEC7JMsejgl68">批量转换</button>
+      <button class="btn btn-ghost" id="btnBatchExample" data-page-node-id="G6VpiRpGexOBaUJG7CgTEX">填入示例</button>
+      <button class="btn btn-ghost" id="btnCopyBatch" data-page-node-id="99IzHzPdzTqCrTEK74JV3A">复制结果</button>
+      <button class="btn btn-ghost" id="btnExportCSV" data-page-node-id="jE1Gqiu0vIM0SyvAs6IdB2">导出 CSV</button>
+    </div>
+    <div class="msg" id="batchMsg" data-page-node-id="6zstMByeDlXlX4EQd8f4XA"></div>
+    <div class="batch-result" id="batchResult" data-page-node-id="yKpi7o4lPc72ySb8AEcwLr"></div>
+  </div>
+
+  <footer data-page-node-id="IEGDnsCAyadXPYiclLkj6U">
+    <b data-page-node-id="6If76Vxl3b7Cf8LezBQhNr">说明：</b><br data-page-node-id="4OFOo5DDls5uvLIcsMRc4A">
+    1. 本工具采用<b data-page-node-id="cfsU02JxeYzGs1McNC3qPB">平面相似变换（四参数）</b>：平移量（X₀、Y₀）+ 旋转角 θ + 比例因子 k，由两组不重合的对照点唯一确定。<br data-page-node-id="NZKqZdouXvE89A4csvNGJS">
+    2. 旋转角 θ 为「将 AB 坐标轴旋转到与 XY 坐标轴重合」的角度，<b data-page-node-id="8sk2oH5HajiRqEZmL7cuH0">逆时针为正、顺时针为负</b>。<br data-page-node-id="FocR7f72nRbyA8LmIPD3d4">
+    3. 当 k≈1 时，两坐标系单位与尺度一致，退化为纯刚体变换（仅平移 + 旋转）。示例中 k≈0.999，说明两套坐标均为米制、仅存在毫米级舍入误差。<br data-page-node-id="ysZRl645a6AzsfFTOlmKwj">
+    4. 输入坐标建议保持相同小数位，X、Y 按米（3 位小数，毫米级）输出，A、B 按 3 位小数输出。<br data-page-node-id="1BCPgAGcYEm2PuQaiyNOW5">
+    5. 结果可自行验算：将点 1、点 2 代入公式应精确还原原坐标。
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+ * 平面相似变换（四参数）工具
+ * 正变换： X = X0 + k*(A*cosθ - B*sinθ)
+ *          Y = Y0 + k*(A*sinθ + B*cosθ)
+ * 逆变换： A = ((X-X0)*cosθ + (Y-Y0)*sinθ) / k
+ *          B = (-(X-X0)*sinθ + (Y-Y0)*cosθ) / k
+ * ============================================================ */
+
+// 全局变换参数（计算成功后填充）
+var T = { X0: 0, Y0: 0, thetaDeg: 0, k: 1, cos: 1, sin: 0 };
+
+/* ---------- 工具函数 ---------- */
+
+// 读取数值：非法/空返回 null，并给对应输入框标红
+function toNum(id, el) {
+  el = el || document.getElementById(id);
+  var raw = el.value.trim();
+  if (raw === '') { el.classList.add('err'); return null; }
+  var v = Number(raw);
+  if (!isFinite(v)) { el.classList.add('err'); return null; }
+  el.classList.remove('err');
+  return v;
+}
+
+// 格式化输出（保留 d 位小数）
+function fmt(v, d) {
+  if (d === undefined) d = 3;
+  return v.toFixed(d);
+}
+
+// 十进制角度 -> 度分秒字符串
+function toDMS(deg) {
+  var neg = deg < 0;
+  var a = Math.abs(deg);
+  var d = Math.floor(a);
+  var mFull = (a - d) * 60;
+  var m = Math.floor(mFull);
+  var s = (mFull - m) * 60;
+  // 处理进位（秒=60）
+  if (s >= 59.9995) { s = 0; m += 1; if (m === 60) { m = 0; d += 1; } }
+  var sStr = s.toFixed(1);
+  return (neg ? '-' : '') + d + '°' + m + '′' + sStr + '″';
+}
+
+// 显示/隐藏消息
+function showMsg(id, type, text) {
+  var el = document.getElementById(id);
+  el.className = 'msg ' + type + ' show';
+  el.textContent = text;
+}
+function hideMsg(id) {
+  document.getElementById(id).className = 'msg';
+}
+
+/* ---------- 计算变换参数 ---------- */
+function computeTransform() {
+  hideMsg('inputMsg');
+
+  var X1 = toNum('X1'), Y1 = toNum('Y1'), A1 = toNum('A1'), B1 = toNum('B1');
+  var X2 = toNum('X2'), Y2 = toNum('Y2'), A2 = toNum('A2'), B2 = toNum('B2');
+
+  var hasErr = [X1, Y1, A1, B1, X2, Y2, A2, B2].some(function (v) { return v === null; });
+  if (hasErr) {
+    showMsg('inputMsg', 'error', '存在空值或非法数值，请检查后重试。');
+    return;
+  }
+
+  var dX = X2 - X1, dY = Y2 - Y1;
+  var dA = A2 - A1, dB = B2 - B1;
+
+  // 退化检查：两个对照点必须不重合
+  var lenAB = Math.hypot(dA, dB);
+  var lenXY = Math.hypot(dX, dY);
+  if (lenAB < 1e-9 || lenXY < 1e-9) {
+    showMsg('inputMsg', 'error', '两个对照点不能重合（AB 或 XY 坐标完全相同），无法解算旋转与比例。');
+    return;
+  }
+
+  // 是否固定比例因子 k = 1（纯刚体变换：仅平移 + 旋转，不缩放）
+  var fixK1 = document.getElementById('fixK1').checked;
+
+  // 旋转角 θ = XY 方向角 - AB 方向角（两点情形下即为最优旋转角）
+  var angXY = Math.atan2(dY, dX);   // 弧度
+  var angAB = Math.atan2(dB, dA);
+  var theta = angXY - angAB;
+  var thetaDeg = theta * 180 / Math.PI;
+
+  var cos = Math.cos(theta);
+  var sin = Math.sin(theta);
+
+  // 解算比例因子 k 与平移量
+  var k, X0, Y0;
+  if (fixK1) {
+    // 模式 A：k 固定为 1。两对照点间的毫米级长度差异（观测/舍入噪声）不再由缩放吸收，
+    // 采用最小二乘最优刚体拟合：旋转角取方向角差，平移量取两坐标系质心差。
+    k = 1;
+    var Cx = (X1 + X2) / 2, Cy = (Y1 + Y2) / 2;
+    var Ca = (A1 + A2) / 2, Cb = (B1 + B2) / 2;
+    X0 = Cx - (Ca * cos - Cb * sin);
+    Y0 = Cy - (Ca * sin + Cb * cos);
+  } else {
+    // 模式 B：四参数精确解，比例因子 = 两坐标系下点间距之比
+    k = lenXY / lenAB;
+    // 平移量：点 1 代入正变换反解
+    X0 = X1 - k * (A1 * cos - B1 * sin);
+    Y0 = Y1 - k * (A1 * sin + B1 * cos);
+  }
+
+  // 保存参数
+  T = { X0: X0, Y0: Y0, thetaDeg: thetaDeg, k: k, cos: cos, sin: sin, fixK1: fixK1 };
+
+  // ---- 展示参数 ----
+  document.getElementById('pX0').textContent = fmt(X0, 3) + ' m';
+  document.getElementById('pY0').textContent = fmt(Y0, 3) + ' m';
+  document.getElementById('pTheta').textContent =
+    fmt(thetaDeg, 6) + '°  （' + toDMS(thetaDeg) + '）';
+  var pThetaNote = document.getElementById('pThetaNote');
+  if (thetaDeg < 0) {
+    pThetaNote.textContent = '逆时针为正；当前 θ < 0，即 AB 系相对 XY 系顺时针旋转 ' + toDMS(-thetaDeg);
+  } else {
+    pThetaNote.textContent = '逆时针为正；当前 θ ≥ 0，即 AB 系相对 XY 系逆时针旋转 ' + toDMS(thetaDeg);
+  }
+  document.getElementById('pK').textContent = fixK1 ? '1（固定）' : fmt(k, 6);
+  var kNote = document.getElementById('pKNote');
+  if (fixK1) {
+    kNote.textContent = '已勾选固定：按纯刚体变换（平移 + 旋转）拟合，忽略两对照点间的毫米级长度差异';
+  } else if (Math.abs(k - 1) < 0.001) {
+    kNote.textContent = 'k ≈ 1，两坐标系单位/尺度一致；如需强制刚体拟合，可勾选左侧「k 固定为 1」';
+  } else {
+    kNote.textContent = 'k ≠ 1，两坐标系存在明显尺度差异，不建议固定 k = 1';
+  }
+
+  // ---- 自校验：点 1、点 2 回代 ----
+  var chk1 = ab2xy(A1, B1);
+  var chk2 = ab2xy(A2, B2);
+  var e1 = Math.hypot(chk1.x - X1, chk1.y - Y1);
+  var e2 = Math.hypot(chk2.x - X2, chk2.y - Y2);
+  var verifyText = '自校验（回代误差）：点1 = ' + e1.toExponential(2) + ' m，点2 = ' + e2.toExponential(2) + ' m';
+  if (fixK1) {
+    verifyText += '（k 已固定为 1，残差源于对照点自身的毫米级观测/舍入噪声，属正常；两点残差之和最小化）';
+  } else {
+    verifyText += '（应接近 0，即精确还原）';
+  }
+  showMsg('verifyMsg', 'warn', verifyText);
+
+  document.getElementById('paramCard').style.display = 'block';
+  document.getElementById('convertCard').style.display = 'block';
+  document.getElementById('batchCard').style.display = 'block';
+  // 参数更新后，批量结果失效，需重新转换
+  document.getElementById('batchResult').classList.remove('show');
+  BATCH.rows = [];
+  BATCH.outCols = [];
+}
+
+/* ---------- 正/逆变换（供计算与转换共用） ---------- */
+function ab2xy(A, B) {
+  return {
+    x: T.X0 + T.k * (A * T.cos - B * T.sin),
+    y: T.Y0 + T.k * (A * T.sin + B * T.cos)
+  };
+}
+function xy2ab(X, Y) {
+  var dx = X - T.X0, dy = Y - T.Y0;
+  return {
+    a: (dx * T.cos + dy * T.sin) / T.k,
+    b: (-dx * T.sin + dy * T.cos) / T.k
+  };
+}
+
+/* ---------- AB -> XY 转换 ---------- */
+function doAB2XY() {
+  var A = toNum('inA'), B = toNum('inB');
+  var el = document.getElementById('resAB2XY');
+  if (A === null || B === null) { el.classList.remove('show'); return; }
+  var r = ab2xy(A, B);
+  el.innerHTML =
+    '<div class="r-line">X = ' + fmt(r.x, 3) + ' m</div>' +
+    '<div class="r-line">Y = ' + fmt(r.y, 3) + ' m</div>' +
+    '<div class="r-line" style="margin-top:4px;"><small>输入 A=' + A + '，B=' + B + '</small></div>';
+  el.classList.add('show');
+}
+
+/* ---------- XY -> AB 转换 ---------- */
+function doXY2AB() {
+  var X = toNum('inX'), Y = toNum('inY');
+  var el = document.getElementById('resXY2AB');
+  if (X === null || Y === null) { el.classList.remove('show'); return; }
+  var r = xy2ab(X, Y);
+  el.innerHTML =
+    '<div class="r-line">A = ' + fmt(r.a, 3) + '</div>' +
+    '<div class="r-line">B = ' + fmt(r.b, 3) + '</div>' +
+    '<div class="r-line" style="margin-top:4px;"><small>输入 X=' + X + '，Y=' + Y + '</small></div>';
+  el.classList.add('show');
+}
+
+/* ---------- 示例 / 清空 ---------- */
+var EXAMPLE = {
+  X1: '4150195.841', Y1: '592925.136', A1: '0', B1: '0',
+  X2: '4150469.221', Y2: '592981.811', A2: '259.5', B2: '103'
+};
+function fillExample() {
+  for (var key in EXAMPLE) {
+    document.getElementById(key).value = EXAMPLE[key];
+    document.getElementById(key).classList.remove('err');
+  }
+  hideMsg('inputMsg');
+}
+function clearAll() {
+  var ids = ['X1','Y1','A1','B1','X2','Y2','A2','B2','inA','inB','inX','inY'];
+  ids.forEach(function (id) {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('err');
+  });
+  hideMsg('inputMsg');
+  document.getElementById('resAB2XY').classList.remove('show');
+  document.getElementById('resXY2AB').classList.remove('show');
+  document.getElementById('batchResult').classList.remove('show');
+  hideMsg('batchMsg');
+  document.getElementById('paramCard').style.display = 'none';
+  document.getElementById('convertCard').style.display = 'none';
+  document.getElementById('batchCard').style.display = 'none';
+}
+
+/* ---------- 批量转换 ---------- */
+// 批量状态：方向、解析结果、输出列名
+var BATCH = { dir: 'ab2xy', rows: [], errors: [], outCols: [] };
+
+function getBatchDir() {
+  var radios = document.querySelectorAll('input[name="batchDir"]');
+  for (var i = 0; i < radios.length; i++) {
+    if (radios[i].checked) return radios[i].value;
+  }
+  return 'ab2xy';
+}
+
+// 解析输入文本：返回 { rows:[{name,c1,c2}], errors:[...] }
+function parseBatch(text) {
+  var lines = text.split(/\r?\n/);
+  var rows = [], errors = [];
+  lines.forEach(function (line, idx) {
+    var raw = line.trim();
+    if (raw === '' || raw.charAt(0) === '#') return; // 跳过空行与注释行
+    // 优先按逗号/分号/制表符拆分，去掉空项
+    var parts = raw.split(/[,，;；\t]+/).map(function (s) { return s.trim(); }).filter(function (s) { return s !== ''; });
+    if (parts.length < 2) {
+      // 无分隔符时按空白拆分
+      parts = raw.split(/\s+/).filter(function (s) { return s !== ''; });
+    }
+    if (parts.length < 2) { errors.push('第 ' + (idx + 1) + ' 行：列数不足'); return; }
+    var name = null, c1, c2;
+    if (parts.length === 2) {
+      c1 = Number(parts[0]); c2 = Number(parts[1]);
+    } else {
+      name = parts[0]; c1 = Number(parts[1]); c2 = Number(parts[2]);
+    }
+    if (!isFinite(c1) || !isFinite(c2)) {
+      errors.push('第 ' + (idx + 1) + ' 行：含非法数值「' + raw + '」');
+      return;
+    }
+    rows.push({ name: name, c1: c1, c2: c2 });
+  });
+  return { rows: rows, errors: errors };
+}
+
+function doBatch() {
+  hideMsg('batchMsg');
+  var text = document.getElementById('batchInput').value;
+  if (text.trim() === '') {
+    showMsg('batchMsg', 'error', '请输入待转换的坐标数据。');
+    document.getElementById('batchResult').classList.remove('show');
+    return;
+  }
+  var dir = getBatchDir();
+  var parsed = parseBatch(text);
+  BATCH.dir = dir;
+  BATCH.rows = parsed.rows;
+  BATCH.errors = parsed.errors;
+
+  if (parsed.rows.length === 0) {
+    showMsg('batchMsg', 'error', parsed.errors.length ? parsed.errors[0] : '没有可转换的有效数据行。');
+    document.getElementById('batchResult').classList.remove('show');
+    return;
+  }
+
+  // 表头与转换函数
+  var cols = (dir === 'ab2xy')
+    ? ['点号', 'A', 'B', 'X', 'Y']
+    : ['点号', 'X', 'Y', 'A', 'B'];
+  BATCH.outCols = cols;
+
+  var html = '<div class="summary">成功转换 ' + parsed.rows.length + ' 行';
+  if (parsed.errors.length) html += '，另有 ' + parsed.errors.length + ' 行解析失败（表格底部标红）';
+  html += '</div>';
+  html += '<div class="batch-table-wrap"><table class="batch-table"><thead><tr>';
+  cols.forEach(function (c) { html += '<th>' + c + '</th>'; });
+  html += '</tr></thead><tbody>';
+
+  parsed.rows.forEach(function (r, i) {
+    var out = (dir === 'ab2xy') ? ab2xy(r.c1, r.c2) : xy2ab(r.c1, r.c2);
+    var name = (r.name !== null && r.name !== '') ? r.name : (i + 1);
+    var ox = (dir === 'ab2xy') ? fmt(out.x, 3) : fmt(out.a, 3);
+    var oy = (dir === 'ab2xy') ? fmt(out.y, 3) : fmt(out.b, 3);
+    html += '<tr><td>' + name + '</td><td>' + r.c1 + '</td><td>' + r.c2 +
+      '</td><td class="out">' + ox + '</td><td class="out">' + oy + '</td></tr>';
+  });
+
+  parsed.errors.forEach(function (e) {
+    html += '<tr class="err-row"><td colspan="5">⚠ ' + e + '</td></tr>';
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('batchResult').innerHTML = html;
+  document.getElementById('batchResult').classList.add('show');
+
+  if (parsed.errors.length) {
+    showMsg('batchMsg', 'warn', '部分行解析失败，已在表格底部标红；其余 ' + parsed.rows.length + ' 行已成功转换。');
+  }
+}
+
+// 生成批量结果文本（复制用制表符分隔，CSV 用逗号分隔）
+function batchResultText(sep) {
+  var dir = BATCH.dir;
+  var header = (dir === 'ab2xy') ? ['点号', 'A', 'B', 'X', 'Y'] : ['点号', 'X', 'Y', 'A', 'B'];
+  var lines = [header.join(sep)];
+  BATCH.rows.forEach(function (r, i) {
+    var out = (dir === 'ab2xy') ? ab2xy(r.c1, r.c2) : xy2ab(r.c1, r.c2);
+    var name = (r.name !== null && r.name !== '') ? r.name : (i + 1);
+    var ox = (dir === 'ab2xy') ? fmt(out.x, 3) : fmt(out.a, 3);
+    var oy = (dir === 'ab2xy') ? fmt(out.y, 3) : fmt(out.b, 3);
+    lines.push([name, r.c1, r.c2, ox, oy].join(sep));
+  });
+  return lines.join('\r\n');
+}
+
+function copyBatch() {
+  if (!BATCH.rows.length) { showMsg('batchMsg', 'error', '请先执行批量转换。'); return; }
+  copyToClipboard(batchResultText('\t'));
+}
+
+function exportCSV() {
+  if (!BATCH.rows.length) { showMsg('batchMsg', 'error', '请先执行批量转换。'); return; }
+  var text = '\ufeff' + batchResultText(','); // BOM 保证 Excel 正确识别中文
+  var blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '坐标批量转换结果.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () {
+      showMsg('batchMsg', 'warn', '已复制到剪贴板（制表符分隔，可直接粘贴到 Excel）。');
+    }, function () { fallbackCopy(text); });
+  } else { fallbackCopy(text); }
+}
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showMsg('batchMsg', 'warn', '已复制到剪贴板。'); }
+  catch (e) { showMsg('batchMsg', 'error', '复制失败，请手动选择表格内容复制。'); }
+  document.body.removeChild(ta);
+}
+
+function fillBatchExample() {
+  var dir = getBatchDir();
+  var ex = (dir === 'ab2xy')
+    ? '# 点号,A,B\n1,0,0\n2,259.5,103\n3,129.75,51.5'
+    : '# 点号,X,Y\n1,4150195.841,592925.136\n2,4150469.221,592981.811\n3,4150332.531,592953.473';
+  document.getElementById('batchInput').value = ex;
+  updateBatchHint();
+}
+
+function updateBatchHint() {
+  var dir = getBatchDir();
+  var hint = (dir === 'ab2xy')
+    ? '每行格式：点号,A,B 或 A,B（A、B 为局部坐标 → 输出 X、Y）'
+    : '每行格式：点号,X,Y 或 X,Y（X、Y 为 CGCS2000 坐标 → 输出 A、B）';
+  document.getElementById('batchHint').textContent = hint;
+}
+
+/* ---------- 事件绑定 ---------- */
+document.getElementById('btnCalc').addEventListener('click', computeTransform);
+// 勾选/取消「k 固定为 1」后，若已有有效输入与结果则自动重算
+document.getElementById('fixK1').addEventListener('change', function () {
+  var card = document.getElementById('paramCard');
+  if (card && card.style.display === 'block') computeTransform();
+});
+document.getElementById('btnExample').addEventListener('click', fillExample);
+document.getElementById('btnClear').addEventListener('click', clearAll);
+document.getElementById('btnAB2XY').addEventListener('click', doAB2XY);
+document.getElementById('btnXY2AB').addEventListener('click', doXY2AB);
+document.getElementById('btnBatch').addEventListener('click', doBatch);
+document.getElementById('btnBatchExample').addEventListener('click', fillBatchExample);
+document.getElementById('btnCopyBatch').addEventListener('click', copyBatch);
+document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
+document.querySelectorAll('input[name="batchDir"]').forEach(function (r) {
+  r.addEventListener('change', updateBatchHint);
+});
+
+// 转换输入框回车触发
+['inA','inB'].forEach(function (id) {
+  document.getElementById(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') doAB2XY(); });
+});
+['inX','inY'].forEach(function (id) {
+  document.getElementById(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') doXY2AB(); });
+});
+
+// 输入框输入时清除标红
+document.querySelectorAll('input').forEach(function (inp) {
+  inp.addEventListener('input', function () { this.classList.remove('err'); });
+});
+
+// 页面加载即填入示例并自动计算，方便直接查看结果
+updateBatchHint();
+fillExample();
+computeTransform();
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "\u5207\u6362\u5230\u6697\u8272\u4e3b\u9898" : "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/XY与AB坐标转换.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>

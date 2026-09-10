@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="BBkplcH9hyDH6yIJ7OG2RW">
+<head data-page-node-id="0i0AdIsbJAh8fc7sVst5yH">
+<meta charset="UTF-8" data-page-node-id="5CotUDPzBDU4BJfzc7rQhS">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="lNre26N0EDSnnVqTKkiJDK">
+<title>批量新建文件夹</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/批量新建文件夹.css" data-page-node-id="yz7Pz9Om02qQJh7uCFkMFs">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/批量新建文件夹.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-page-node-id="w58IHK5HHqZdhSx9MdPaoY">
+<div class="wrap" data-page-node-id="FsslLquYawKY2IBRI85Lgm">
+
+  <!-- ===== 页头横幅 ===== -->
+  <header data-page-node-id="0eVBtF4fXQeJWJEURQODhc">
+    <h1 data-page-node-id="Cj0ORnWAL8tII6B3nKcDdQ">批量新建文件夹</h1>
+    <p class="sub" data-page-node-id="VxDsL3F0inUIwc7dWQwNNZ">批量粘贴文件夹名称 → 生成 .bat 批处理 → 下载后放到父目录双击运行，一次建立全部文件夹</p>
+  </header>
+
+  <!-- ===== ① 名称输入 ===== -->
+  <div class="panel" data-page-node-id="jShaTOabkTRfrDPyuAWoWb">
+    <div class="panel-title" data-page-node-id="IcqThYW6wsJmtilL0rYlbF">① 文件夹名称（每行一个，粘贴后自动校验）</div>
+    <div class="panel-body" data-page-node-id="I4AQoETjYtgCTwSUEYGdJa">
+      <textarea id="nameInput" spellcheck="false" placeholder="每行一个文件夹名称，例如：
+风机1
+风机2
+风机3\图纸
+风机3\报告
+
+说明：
+· 支持直接从 Excel 单列粘贴；
+· 行内含 \ 或 / 时按子目录处理（自动创建多级，如 风机3\图纸）；
+· 非法字符（\ / : * ? &quot; &lt; &gt; | 除外）、结尾点/空格等会自动标出。"></textarea>
+      <div class="btn-row" data-page-node-id="iLXHu0wKPQaZHXQPXKkUhT">
+        <button class="btn btn-primary" id="btnBuild" data-page-node-id="OTEmPn9LKBQStBYrw246Hn">生成 BAT 预览</button>
+        <button class="btn btn-ghost" id="btnExample" data-page-node-id="UVk72darSUcHLf2oyAFCvT">填入示例</button>
+        <button class="btn btn-ghost" id="btnClear" data-page-node-id="mJmh7sTQVqpcrNHvZ98E7R">清空</button>
+        <span class="live-hint" data-page-node-id="RI5YuhB1TQfmvTUIl0ccZP">输入内容变化时校验结果实时更新</span>
+      </div>
+      <div class="msg" id="inputMsg" data-page-node-id="msIVqCTrynxvWCSGmmC45B"></div>
+    </div>
+  </div>
+
+  <!-- ===== ② 校验结果 ===== -->
+  <div class="panel hidden" id="checkPanel" data-page-node-id="LiYy3E1arGYeNNGvYrYuIC">
+    <div class="panel-title" data-page-node-id="66Gr5FoFYJugZlreIY3kNj">② 名称校验与预览</div>
+    <div class="panel-body" data-page-node-id="DdQ36hRiTgUJNEKBr4g6aM">
+      <div class="msg" id="checkMsg" data-page-node-id="x3JF7ESJnKtExjGNcvrKvh"></div>
+      <div class="table-wrap" data-page-node-id="J7PgdVJBooxYfMCucgpAIf">
+        <table data-page-node-id="4HFAG1r5hzCCgHer8GEEVl">
+          <thead data-page-node-id="y11UspGbfF9uhFCCH4lrAV">
+            <tr data-page-node-id="YTPTnQEHCHgL5zGDJmRqcD"><th style="width:56px;" data-page-node-id="GQbKYsdTCRY8n9tOtvmx6h">序号</th><th style="text-align:left;" data-page-node-id="Hm7txWv3c3E2nGOM9BWuRA">文件夹名（BAT 内实际写法）</th><th style="width:220px;" data-page-node-id="f13YmZXALfcRFZgo9X1VfW">状态</th></tr>
+          </thead>
+          <tbody id="checkBody" data-page-node-id="Os2abN1Oli9xkcYHlvAeEi"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ③ BAT 脚本 ===== -->
+  <div class="panel hidden" id="batPanel" data-page-node-id="kAisObuhUoaLyTre2S4xQV">
+    <div class="panel-title" data-page-node-id="czUdHINfINXs0nG0jG3Ejf">③ BAT 批处理脚本</div>
+    <div class="panel-body" data-page-node-id="RMr6PeEUoMGpZrpIyjgn3I">
+      <textarea id="batOut" class="bat-box" readonly spellcheck="false"></textarea>
+      <div class="btn-row" data-page-node-id="EFD30fsEUDkQTjFCvm6ZxE">
+        <button class="btn btn-primary" id="btnDownload" data-page-node-id="SyL8ScZTTqzMnlwbbr5PfD">下载 .bat 文件</button>
+        <button class="btn btn-ghost" id="btnCopy" data-page-node-id="SdNYa0IExGeORkXwfk8GGa">复制脚本内容</button>
+      </div>
+      <div class="tip" data-page-node-id="BbER1Fur6a3SlTui1OaB5E">
+        <b data-page-node-id="1EsadEJECDQcTyiLXQBLT1">使用方法：</b>下载 .bat 后，将其<b data-page-node-id="FXAUEiqtTqzN0flzlhQIs7">放到父目录</b>（即要新建文件夹的位置）双击运行即可；已存在的文件夹会自动跳过，末尾显示统计并暂停。<br data-page-node-id="9g3HkWlv6AW3qCBv7Yqolp">
+        <b data-page-node-id="79aCxZofJymIXs4HYV8FBv">编码说明：</b>脚本为 UTF-8（chcp 65001）以支持中文文件夹名，Windows 10/11 直接可用；若个别系统出现乱码，用记事本打开脚本「另存为 → ANSI 编码」后再运行。<br data-page-node-id="d3aIzYTFG9DJ1sZQvLsU6z">
+        <b data-page-node-id="uu8GFHTmScrN43pKROGsBb">子目录：</b>名称中含 \ 或 / 的行会创建多级目录（父级目录不存在时自动创建）。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var $ = function(id){ return document.getElementById(id); };
+
+/* ==================== Windows 名称校验 ==================== */
+var ILLEGAL = /[\\/:*?"<>|]/;                 // 单段名称非法字符（\ / 用于子目录，单独判断）
+var RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;  // Windows 保留名
+
+/* 解析输入文本 → 行对象数组
+ * 返回 { rows:[{raw, name, segs, status, reason}], ok:[], dup:0, bad:0 } */
+function parseNames(text){
+  var lines = text.split(/\r?\n/);
+  var rows = [];
+  var seen = {};        // 小写完整路径 → 已去重
+  var ok = [], dup = 0, bad = 0;
+
+  lines.forEach(function(rawLine, idx){
+    var raw = rawLine.trim();
+    if (raw === "") return;                       // 空行跳过
+    // 统一子目录分隔符：/ → \
+    var norm = raw.replace(/\//g, "\\");
+    // 结尾点/空格（每段分别处理，Windows 按段校验）
+    var fixed = norm.replace(/(\.+|\s+)(\\|$)/g, "$2");
+    var trailingFixed = (fixed !== norm);
+    norm = fixed;
+
+    var segs = norm.split("\\").filter(function(s){ return s !== ""; });
+
+    var reason = "";
+    var status = "ok";
+
+    if (norm.length === 0){
+      status = "bad"; reason = "名称为空";
+    } else if (norm.charAt(0) === "\\"){
+      status = "bad"; reason = "不能以分隔符开头（应填写相对父目录的名称）";
+    } else if (norm.length > 255){
+      status = "bad"; reason = "超过 255 字符上限";
+    } else {
+      // 逐段校验
+      for (var i = 0; i < segs.length; i++){
+        var seg = segs[i];
+        if (seg === ""){ status = "bad"; reason = "路径中存在空段（连续分隔符）"; break; }
+        if (ILLEGAL.test(seg)){
+          status = "bad";
+          reason = "第 " + (i+1) + " 级名称含非法字符（\\ / : * ? \" < > |）";
+          break;
+        }
+        if (/[. ]$/.test(seg)){
+          status = "bad"; reason = "第 " + (i+1) + " 级名称以点或空格结尾（Windows 不允许）"; break;
+        }
+        if (RESERVED.test(seg)){
+          status = "bad"; reason = "「" + seg.split(".")[0] + "」为 Windows 保留名"; break;
+        }
+        if (seg.length > 255){
+          status = "bad"; reason = "第 " + (i+1) + " 级名称超过 255 字符"; break;
+        }
+      }
+    }
+
+    // 去重（Windows 不区分大小写）
+    if (status === "ok"){
+      var key = norm.toLowerCase();
+      if (seen[key]){
+        status = "dup"; reason = "与第 " + seen[key] + " 行重复，已自动去重";
+        dup++;
+      } else {
+        seen[key] = rows.length + 1;
+        ok.push(norm);
+      }
+    }
+    if (status === "bad") bad++;
+    if (trailingFixed && status !== "bad"){
+      reason = reason ? reason + "；" : "";
+      reason += "已自动去除结尾点/空格";
+      if (status === "ok") status = "warn";
+      else if (status === "dup") reason = "与前面行重复，已自动去重；已自动去除结尾点/空格";
+    }
+
+    rows.push({ idx: idx + 1, raw: raw, name: norm, segs: segs, status: status, reason: reason });
+  });
+
+  return { rows: rows, ok: ok, dup: dup, bad: bad };
+}
+
+/* ==================== BAT 内容生成 ==================== */
+/* bat 内 % 需转义为 %%；引号已在非法字符校验中排除 */
+function batEscape(s){ return s.replace(/%/g, "%%"); }
+
+function buildBat(names){
+  var L = [];
+  L.push("@echo off");
+  L.push("chcp 65001 >nul");
+  L.push("rem ============================================");
+  L.push("rem 批量新建文件夹脚本");
+  L.push("rem 由 新能源工具箱 · 批量新建文件夹 生成");
+  L.push("rem 用法：放到父目录下双击运行，已存在的自动跳过");
+  L.push("rem 共 " + names.length + " 个文件夹");
+  L.push("rem ============================================");
+  names.forEach(function(n){
+    var e = batEscape(n);
+    L.push('if not exist "' + e + '" md "' + e + '"');
+  });
+  L.push("");
+  L.push("echo 全部执行完毕：共处理 " + names.length + " 个文件夹（已存在的自动跳过）。");
+  L.push("pause");
+  return L.join("\r\n") + "\r\n";
+}
+
+/* ==================== 渲染 ==================== */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function statusCell(st, reason){
+  if (st === "ok")   return '<span class="st st-ok">✓ 可用</span>';
+  if (st === "warn") return '<span class="st st-warn">⚠ 可用（' + esc(reason || "") + '）</span>';
+  if (st === "dup")  return '<span class="st st-warn">⚠ ' + esc(reason || "重复，已去重") + '</span>';
+  return '<span class="st st-err">✗ ' + esc(reason || "不可用") + '</span>';
+}
+
+var LAST = { ok: [], bat: "" };
+
+function rebuild(){
+  var text = $("nameInput").value;
+  var r = parseNames(text);
+  LAST.ok = r.ok;
+
+  /* 汇总消息 */
+  var msgEl = $("inputMsg");
+  if (text.trim() === ""){
+    msgEl.className = "msg";
+    msgEl.textContent = "";
+  } else {
+    var html = "共读取 <b>" + r.rows.length + "</b> 行：可用 <b>" + r.ok.length + "</b>";
+    if (r.dup) html += "，重复去重 <b>" + r.dup + "</b>";
+    if (r.bad) html += '，<span class="err-text">不可用 ' + r.bad + "</span>（已排除）";
+    msgEl.className = "msg " + (r.bad ? "warn" : (r.ok.length ? "ok" : "error"));
+    msgEl.innerHTML = html;
+  }
+
+  /* 校验表格 */
+  var tbody = $("checkBody");
+  tbody.innerHTML = "";
+  r.rows.forEach(function(row){
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td>" + row.idx + "</td>" +
+      '<td class="name-cell">' + esc(row.status === "bad" ? row.raw : row.name) + "</td>" +
+      "<td>" + statusCell(row.status, row.reason) + "</td>";
+    tbody.appendChild(tr);
+  });
+  $("checkPanel").classList.toggle("hidden", r.rows.length === 0);
+
+  /* BAT 预览 */
+  if (r.ok.length){
+    LAST.bat = buildBat(r.ok);
+    $("batOut").value = LAST.bat;
+    $("batPanel").classList.remove("hidden");
+  } else {
+    LAST.bat = "";
+    $("batOut").value = "";
+    $("batPanel").classList.add("hidden");
+  }
+}
+
+/* ==================== 下载 / 复制 ==================== */
+function downloadBat(){
+  if (!LAST.bat){ showTemp("请先生成有效的文件夹清单"); return; }
+  /* UTF-8 无 BOM：首行 @echo off 前不能有 BOM，配合 chcp 65001 支持中文 */
+  var blob = new Blob([LAST.bat], { type: "application/octet-stream" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "批量新建文件夹.bat";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+function copyBat(){
+  if (!LAST.bat){ showTemp("请先生成有效的文件夹清单"); return; }
+  var done = function(){ flashBtn($("btnCopy"), "✓ 已复制"); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(LAST.bat).then(done, function(){ fallbackCopy(done); });
+  } else { fallbackCopy(done); }
+}
+function fallbackCopy(done){
+  var ta = document.createElement("textarea");
+  ta.value = LAST.bat; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+function flashBtn(btn, txt){
+  var old = btn.textContent;
+  btn.textContent = txt;
+  setTimeout(function(){ btn.textContent = old; }, 1500);
+}
+var msgTimer = null;
+function showTemp(txt){
+  var el = $("inputMsg");
+  el.className = "msg warn show";
+  el.textContent = txt;
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(function(){ el.className = "msg"; }, 2500);
+}
+
+/* ==================== 示例 / 清空 ==================== */
+function fillExample(){
+  /* 含两级子目录示例（\ 或 / 均可），覆盖多级创建场景 */
+  $("nameInput").value =
+    "风机1\n风机2\n风机3\n" +
+    "风机1\\图纸\n风机1\\报告\n" +
+    "前期资料\\征地文件";
+  rebuild();
+}
+function clearAll(){
+  $("nameInput").value = "";
+  rebuild();
+}
+
+/* ==================== 事件绑定 ==================== */
+$("btnBuild").addEventListener("click", rebuild);
+$("btnExample").addEventListener("click", fillExample);
+$("btnClear").addEventListener("click", clearAll);
+$("btnDownload").addEventListener("click", downloadBat);
+$("btnCopy").addEventListener("click", copyBat);
+/* 输入实时校验（停止 300ms 抖动后再渲染，粘贴大列表不卡顿） */
+var inputTimer = null;
+$("nameInput").addEventListener("input", function(){
+  clearTimeout(inputTimer);
+  inputTimer = setTimeout(rebuild, 300);
+});
+
+/* 初始化：填入示例并生成，方便直接查看效果 */
+fillExample();
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "切换到暗色主题" : "切换到浅色主题";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/批量新建文件夹.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>

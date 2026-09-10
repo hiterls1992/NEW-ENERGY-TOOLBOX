@@ -1,0 +1,139 @@
+/* ============================================================
+   新能源项目环境效益计算表 · 浅色工程风主题
+   统一设计规范（两主题一致）：
+   圆角 页头/卡片 10px · 按钮/输入框/表格容器/提示条 8px
+   页头 = 深蓝工程渐变横幅 · 表头 = #eaf1f8 + #1f4e79
+   ============================================================ */
+:root{
+    --c-main:   #2F5496;   /* 主色：深蓝 */
+    --c-main-d: #1f3a6d;
+    --c-bg:     #eef2f8;   /* 页面背景 */
+    --c-card:   #ffffff;   /* 卡片背景 */
+    --c-line:   #d4dce8;   /* 边框线 */
+    --c-text:   #22303f;
+    --c-sub:    #5f6b7a;
+    --c-gold:   #fff2cc;   /* 电量输入底色 */
+    --c-blue-bg:#eaf1fb;   /* 系数行浅蓝底 */
+    --c-green-bg:#e2efda;  /* 系数行浅绿底 */
+    --c-blue-tx:#0b3dd0;   /* 可调参数文字 */
+    --c-ok:     #1a7f37;   /* 正常 */
+    --c-warn:   #b45309;
+    --c-err:    #c62828;
+    --c-badge:  #d9e2f3;
+    --radius:   10px;
+    --r-md:     8px;
+    --th-bg:    #eaf1f8; --th-tx:#1f4e79;
+    --focus-ring: 0 0 0 3px rgba(47,84,150,.15);
+    --shadow:   0 1px 3px rgba(20,40,80,.08), 0 4px 14px rgba(20,40,80,.06);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    font-family:"Segoe UI","Microsoft YaHei",-apple-system,sans-serif;
+    background:var(--c-bg);
+    color:var(--c-text); font-size:14px; line-height:1.55;
+    padding:26px 14px 60px;
+  }
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#b0b8c8;border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  .wrap{ max-width:1020px; margin:0 auto; }
+
+  /* ============ 页头（统一横幅） ============ */
+  .header{ background:linear-gradient(120deg,#2F5496,#3b6cb5);
+    border:none;
+    color:#fff; border-radius:var(--radius); padding:14px 18px; box-shadow:var(--shadow); }
+  .header h1{ font-size:20px; letter-spacing:1px; font-weight:700; text-shadow:none; }
+  .header .sub{ margin-top:8px; font-size:12.5px; color:rgba(255,255,255,.82); }
+  .header .sub b{ color:#fff; font-weight:600; }
+  .version{ float:right; font-size:11px; background:rgba(255,255,255,.16);
+    color:#fff; border:1px solid rgba(255,255,255,.3);
+    padding:2px 10px; border-radius:20px; margin-top:2px; }
+
+  /* ============ 通用卡片 ============ */
+  .card{ background:var(--c-card); border:1px solid var(--c-line);
+    border-radius:var(--radius); box-shadow:var(--shadow); margin-top:16px; overflow:hidden; }
+  .card-head{ background:var(--th-bg); border-bottom:1px solid var(--c-line);
+    padding:10px 16px; font-weight:700; color:var(--th-tx); font-size:13.5px;
+    letter-spacing:.5px;
+    display:flex; align-items:center; gap:8px; }
+  .card-head .tip{ font-weight:400; font-size:12px; color:var(--c-sub); margin-left:6px;}
+  .card-body{ padding:18px 20px; }
+
+  /* ============ 校验提示（统一 8px 圆角） ============ */
+  .alert{ display:none; margin:0 0 14px; padding:9px 14px; border-radius:var(--r-md);
+    font-size:13px; background:#fdecea; border:1px solid #f3b7b0; color:var(--c-err); }
+  .alert.show{ display:block; }
+  .alert ul{ margin:2px 0 0 18px; }
+  .hint-line{ font-size:12px; color:var(--c-sub); margin-top:10px; }
+
+  /* ============ 输入区 ============ */
+  table.in-tab{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed;
+    border:1px solid var(--c-line); border-radius:var(--r-md); overflow:hidden; }
+  table.in-tab th{ background:var(--th-bg); color:var(--th-tx); font-weight:600; font-size:12.5px;
+    padding:8px 12px; text-align:left; white-space:nowrap;
+    border-right:1px solid #d4dce8; border-bottom:1px solid #d4dce8; }
+  table.in-tab td{ padding:8px 12px;
+    border-right:1px solid var(--c-line); border-bottom:1px solid var(--c-line); }
+  /* 去掉最右列竖线与末行横线，避免与外框重线 */
+  table.in-tab th:last-child, table.in-tab td:last-child{ border-right:none; }
+  table.in-tab tbody tr:last-child td{ border-bottom:none; }
+  /* 四角：表头左上/右上，末行左下/右下 */
+  table.in-tab th:first-child{ border-top-left-radius:7px; }
+  table.in-tab th:last-child{ border-top-right-radius:7px; }
+  table.in-tab tbody tr:last-child td:first-child{ border-bottom-left-radius:7px; }
+  table.in-tab tbody tr:last-child td:last-child{ border-bottom-right-radius:7px; }
+  table.in-tab td.name{ font-weight:600; }
+  table.in-tab td.desc{ color:var(--c-sub); font-size:12.5px; }
+  .num-wrap{ display:flex; align-items:center; gap:8px; }
+  .num-wrap input{ width:150px; padding:6px 10px; border:1px solid #9db4d6; border-radius:var(--r-md);
+    font-size:14px; font-weight:600; color:var(--c-blue-tx); background:#fbfdff; text-align:right;
+    outline:none; transition:border .15s, box-shadow .15s; }
+  .num-wrap input:focus{ border-color:var(--c-main); box-shadow:var(--focus-ring); }
+  .num-wrap input.invalid{ border-color:var(--c-err); background:#fff5f5; box-shadow:0 0 0 3px rgba(198,40,40,.12);}
+  .num-wrap .unit{ font-size:12.5px; color:var(--c-sub); white-space:nowrap; min-width:60px;}
+  .cell-e input{ background:var(--c-gold); }
+  tr.coef-a td{ background:var(--c-blue-bg); }
+  tr.coef-b td{ background:var(--c-green-bg); }
+
+  /* ===== 按钮（统一：8px 18px / 圆角 8px / 13.5px / 600） ===== */
+  .btn-row{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;}
+  .btn{ border:1px solid transparent; cursor:pointer; border-radius:var(--r-md); font-size:13.5px; font-weight:600;
+    padding:8px 18px; transition:filter .15s, transform .05s, box-shadow .2s; }
+  .btn:active{ transform:translateY(1px); }
+  .btn-primary{ background:var(--th-tx); color:#fff; box-shadow:none; }
+  .btn-primary:hover{ background:#2d6da3; filter:none; }
+  .btn-ghost{ background:#fff; color:var(--th-tx); border:1px solid #9db4d6; }
+  .btn-ghost:hover{ background:#f0f5fd; }
+
+  /* ============ 结果区 ============ */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+  .res-card{ border:1px solid var(--c-line); border-radius:var(--radius); padding:13px 15px;
+    background:linear-gradient(180deg,#fbfdff,#f4f8fe); position:relative; }
+  .res-card .rc-name{ font-size:13px; font-weight:600; color:var(--c-sub); }
+  .res-card .rc-val{ font-size:25px; font-weight:800; color:var(--c-main-d); margin-top:2px;
+    font-variant-numeric:tabular-nums; }
+  .res-card .rc-val small{ font-size:13px; font-weight:600; color:var(--c-sub); margin-left:3px; }
+  .res-card .rc-exact{ font-size:11.5px; color:#8593a6; margin-top:3px;
+    font-variant-numeric:tabular-nums; }
+  .res-card .rc-formula{ font-size:11.5px; color:var(--c-sub); margin-top:5px;
+    border-top:1px dashed #ccd6e4; padding-top:5px; word-break:break-all;}
+
+  /* ============ 说明文字区 ============ */
+  .para-box{ border:1px solid #b9c9e2; background:#fbfdff; border-radius:var(--radius);
+    padding:15px 17px; font-size:14.5px; line-height:2; color:#1e2b3a; }
+  .para-box .hl{ background:#fff3cd; padding:1px 3px; border-radius:4px; font-weight:600;
+    color:#7a4e00; }
+  .para-foot{ display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap; }
+  .copied-msg{ font-size:12.5px; color:var(--c-ok); display:none; }
+  .copied-msg.show{ display:inline; }
+  .badge{ display:inline-block; background:var(--c-badge); color:var(--c-main-d);
+    font-size:11px; font-weight:700; padding:1px 8px; border-radius:4px; margin-right:6px; }
+
+  footer{ text-align:center; color:#8b97a8; font-size:12px; margin-top:22px; }
+
+  /* ===== 主题切换按钮（仅独立打开工具时显示） ===== */
+  .theme-toggle{position:fixed;right:14px;bottom:14px;z-index:999;width:36px;height:36px;
+    border-radius:50%;cursor:pointer;font-size:16px;line-height:1;
+    background:#fff;border:1px solid #9db4d6;color:#2F5496;
+    box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .theme-toggle:hover{border-color:#2F5496}

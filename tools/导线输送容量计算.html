@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>导线输送容量计算 — DL/T 5582-2020 / 电力工程设计手册</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/导线输送容量计算.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/导线输送容量计算.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div class="container">
+
+<header class="title-bar">
+  <h1>导线输送容量计算</h1>
+  <p>— 钢芯铝绞线 · 架空输电线路 —</p>
+  <p class="refs">
+    依据 <b>DL/T 5582-2020</b>《架空输电线路电气设计规程》·
+    <b>GB 50545-2010</b>《110kV~750kV 架空输电线路设计规范》·
+    <b>电力工程设计手册—架空输电线路设计</b> 公式 (3-71)~(3-77)·
+    <b>GB/T 1179-2017</b>《圆线同心绞架空导线》
+  </p>
+</header>
+
+<section class="calc-panel">
+  <div class="toolbar">
+    <span class="spacer"></span>
+    <button id="btnReset" class="ghost" type="button">恢复默认</button>
+    <button id="btnExport" type="button">复制结果</button>
+  </div>
+
+  <table class="calc">
+    <colgroup>
+      <col class="col-name"><col class="col-param"><col class="col-unit"><col class="col-op"><col>
+    </colgroup>
+    <thead>
+      <tr><th>项 目</th><th>参 数</th><th>单 位</th><th>操 作</th><th>备 注</th></tr>
+    </thead>
+    <tbody id="calcBody"></tbody>
+  </table>
+
+    <div class="statusbar" id="statusbar">
+    <span id="statusText">就绪 · 修改任何输入后自动重新计算</span>
+  </div>
+</section>
+
+<!-- 经济电流密度参考表 -->
+<div class="section-title eco"><span class="icon">💰</span>经济电流密度 J (A/mm²) — DL/T 5582-2020 / 电力工程设计手册</div>
+<div class="ref-card" style="max-height:200px">
+  <table class="ref" id="ecoRefTbl">
+    <thead><tr><th>导线材料</th><th>T<sub>max</sub> &lt; 3000 h</th><th>3000 ~ 5000 h</th><th>T<sub>max</sub> &gt; 5000 h</th></tr></thead>
+    <tbody>
+      <tr><td>铜线</td><td>3.00</td><td>2.25</td><td>1.75</td></tr>
+      <tr class="eco-row"><td><b>钢芯铝绞线、铝绞线</b></td><td><b>1.65</b></td><td><b>1.15</b></td><td><b>0.90</b></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 表 3-12 -->
+<div class="section-title"><span class="icon">📋</span>表 3-12 常用钢芯铝绞线允许载流量（计算条件：日照 1000 W/m²、风速 0.5 m/s、α<sub>s</sub>=E<sub>1</sub>=0.93）</div>
+<div class="ref-card"><table class="ref" id="refTable12"><thead><tr id="refHead"></tr></thead><tbody id="refBody"></tbody></table></div>
+
+<!-- 表 3-11 -->
+<div class="section-title"><span class="icon">🌡️</span>表 3-11 各地最热月平均气温</div>
+<div class="ref-card" style="max-height:320px">
+  <table class="ref">
+    <thead><tr><th>地 名</th><th>最热月平均气温 (℃)</th><th>地 名</th><th>最热月平均气温 (℃)</th><th>地 名</th><th>最热月平均气温 (℃)</th></tr></thead>
+    <tbody id="cityTbl"></tbody>
+  </table>
+</div>
+
+<!-- 公式推导 -->
+<div class="section-title"><span class="icon">📐</span>载流量计算公式推导 (DL/T 5582-2020 / 电力工程设计手册)</div>
+<div class="formula-card">
+  <h3>1. 热平衡方程 (DL/T 5582-2020) — 公式 (3-71)</h3>
+  <pre>  I² · R'<sub>t</sub> = W<sub>R</sub> + W<sub>F</sub> − W<sub>S</sub>
+      ⇒  I = √[(W<sub>R</sub> + W<sub>F</sub> − W<sub>S</sub>) / R'<sub>t</sub>]</pre>
+
+  <h3>2. 允许温度下的交流电阻</h3>
+  <pre>  R'<sub>t</sub> = R<sub>20</sub> · [1 + 0.004·(T<sub>c</sub> − 20)] · β
+      α = 0.004  1/℃   —— 铝电阻温度系数
+      β = 1.004          —— 集肤效应系数</pre>
+
+  <h3>3. 辐射散热功率 W<sub>R</sub> — 公式 (3-72)</h3>
+  <pre>  W<sub>R</sub> = π · D · E<sub>1</sub> · σ · [(T<sub>c</sub>+273)⁴ − (T<sub>a</sub>+273)⁴]
+      σ = 5.6697×10⁻⁸  W/(m²·K⁴)   —— 斯特藩-玻尔兹曼常数</pre>
+
+  <h3>4. 对流散热功率 W<sub>F</sub></h3>
+  <pre>  膜温  T<sub>film</sub> = (T<sub>c</sub> + T<sub>a</sub>) / 2
+  空气热导率   λ<sub>f</sub> = 2.42×10⁻² + 7×10⁻⁵ · T<sub>film</sub>          W/(m·K)         (3-74)
+  空气运动粘度 ν    = 1.32×10⁻⁵ + 9.5×10⁻⁸ · T<sub>film</sub>          m²/s            (3-76)
+  雷诺数       R<sub>e</sub> = V·D / ν</pre>
+  <pre>  W<sub>F</sub> = 0.57 · π · λ<sub>f</sub> · (T<sub>c</sub>−T<sub>a</sub>) · R<sub>e</sub><sup>0.485</sup>              (3-73)</pre>
+  <p style="color:var(--text-dim);font-size:12px">注：公式 (3-73) 为电力工程设计手册给出的综合简化公式，工程常用；等效于分项 Nusselt 准则（Nu = 0.65·Re<sup>0.2</sup> + 0.23·Re<sup>0.61</sup>）经过"等效换热因子"归一后的近似，在 Re=100~3000 范围内误差 <span style="color:var(--text-eco)">≤ 2%</span>。</p>
+
+  <h3>5. 日照吸热功率 W<sub>S</sub> — 公式 (3-77)</h3>
+  <pre>  W<sub>S</sub> = α<sub>s</sub> · J<sub>s</sub> · D
+      α<sub>s</sub> —— 导线表面吸热系数，光亮新线 0.35~0.46，旧线/涂黑防腐剂 0.9~0.95
+      J<sub>s</sub> —— 日照强度，晴天 1000 W/m²</pre>
+
+  <h3>6. 输送容量</h3>
+  <pre>  S = √3 · U · I · n   (MVA)          P = S · cos(φ)   (MW)</pre>
+
+  <h3>7. 参数取值参考</h3>
+  <table>
+    <thead><tr><th>参 数</th><th>光亮新线</th><th>旧线/涂黑防腐剂</th></tr></thead>
+    <tbody>
+      <tr><td>α<sub>s</sub> 表面吸热系数</td><td>0.35 ~ 0.46</td><td>0.9 ~ 0.95</td></tr>
+      <tr><td>E<sub>1</sub> 辐射散热系数</td><td>0.23 ~ 0.43</td><td>0.9 ~ 0.95</td></tr>
+      <tr><td>T<sub>c</sub> 最高允许温度</td><td colspan="2" style="background:#fbbf24;">钢芯铝绞线一般 70℃，必要时 80℃；铝包钢芯铝绞线 80℃；大跨越 90℃</td></tr>
+      <tr><td>风速 V</td><td colspan="2" style="background:#fbbf24;">常规线路 0.5 m/s；大跨越 0.6 m/s</td></tr>
+      <tr><td>日照 J<sub>s</sub></td><td colspan="2" style="background:#fbbf24;">晴天直射 1000 W/m²</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-title eco"><span class="icon">💰</span>经济电流密度计算说明 (DL/T 5582-2020)</div>
+<div class="formula-card">
+  <h3>经济电流与经济输送容量</h3>
+  <pre>  P<sub>eco</sub> = √3 · U · I<sub>eco</sub> · n · cos(φ)
+      I<sub>eco</sub> = S · J
+      式中：
+      S — 导线计算截面 (铝截面, mm²)
+      J — 经济电流密度 (A/mm²)，由 T<sub>max</sub> 和导线材料查表确定
+      U — 系统标称电压 (kV)
+      n — 分裂数
+      cos(φ) — 功率因数</pre>
+  <p>经济输送容量表示：在给定 <b>T<sub>max</sub></b> 和电压等级下，当前导线截面对应的<b>经济合理最大输送功率</b>。</p>
+  <ul style="margin:4px 0">
+    <li>选择导线截面和 T<sub>max</sub> → 自动读出经济电流密度 J</li>
+    <li>I<sub>eco</sub> = S × J → 该截面可经济输送的电流</li>
+    <li>P<sub>eco</sub> = √3·U·I<sub>eco</sub>·n·cosφ → 经济输送容量</li>
+  </ul>
+  <p style="font-size:12px;color:var(--text-dim)">注：年最大负荷利用小时数 T<sub>max</sub> 通过负荷预测或电力公司典型数据获取。经济电流密度用于以"年费用最小"原则选择导线截面，与热稳定极限载流量各自独立计算。</p>
+</div>
+
+<div class="section-title"><span class="icon">⚡</span>电压降落与线损计算公式</div>
+<div class="formula-card">
+  <h3>线路电抗 X</h3>
+  <pre>  r = D / 2000                       （导线半径，m；D 为外径 mm）
+  X = 0.1445 · lg(D<sub>eq</sub> / r) + 0.0157 / n          （Ω/km）
+      式中：
+      D<sub>eq</sub> — 各相导线间几何均距 (m)，取决于杆塔排列型式
+      n — 每相分裂子导线数
+      lg — 以 10 为底的对数</pre>
+  <p style="font-size:12px;color:var(--text-dim)">注：分裂导线对电抗的修正采用简化的 0.0157/n 近似，内部电抗与外部电抗合并，在工程常用范围内误差可接受。</p>
+
+  <h3>电压降落 ΔU</h3>
+  <pre>  ΔU = √3 · I<sub>eco</sub> · (R<sub>20</sub> · cosφ + X · sinφ) · L / 1000      （kV）
+  ΔU% = ΔU / U × 100                   （%）
+      式中：
+      I<sub>eco</sub> — 经济电流 (A)
+      R<sub>20</sub> — 20℃直流电阻 (Ω/km)
+      X — 单位长度电抗 (Ω/km)
+      L — 线路长度 (km)
+      cosφ / sinφ — 负荷功率因数及其无功分量</pre>
+
+  <h3>线损 ΔP</h3>
+  <pre>  ΔP = 3 · I<sub>eco</sub>² · R<sub>20</sub> · L / 1000              （kW）
+  线损率 = ΔP / (√3 · U · I<sub>eco</sub> · cosφ) × 100    （%）</pre>
+
+  <h3>典型参数参考</h3>
+  <table>
+    <thead><tr><th>电压等级</th><th>相间几何均距 D<sub>eq</sub></th><th>典型电抗范围</th></tr></thead>
+    <tbody>
+      <tr><td>35 kV</td><td>2.5 ~ 3.5 m</td><td>0.35 ~ 0.40 Ω/km</td></tr>
+      <tr><td>66 kV</td><td>3.5 ~ 4.5 m</td><td>0.38 ~ 0.42 Ω/km</td></tr>
+      <tr><td>110 kV</td><td>4.0 ~ 6.0 m</td><td>0.38 ~ 0.44 Ω/km</td></tr>
+      <tr><td>220 kV</td><td>6.0 ~ 9.0 m</td><td>0.40 ~ 0.44 Ω/km</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ===== 物理常数 ===== */
+const SIGMA=5.6697e-8, ALPHA_R=0.004, BETA=1.004;
+
+/* ===== 导线数据库 (GB/T 1179-2017 JL/G1A) ===== */
+const CONDUCTOR_DB={
+  "JL/G1A-16/3":[5.55,1.7791,16.13],"JL/G1A-25/4":[6.96,1.1313,25.36],"JL/G1A-35/6":[8.16,0.8230,34.86],
+  "JL/G1A-50/8":[9.60,0.5946,48.25],"JL/G1A-70/10":[11.40,0.4217,68.05],"JL/G1A-95/15":[13.60,0.3059,94.39],
+  "JL/G1A-95/20":[13.87,0.3019,95.14],"JL/G1A-120/7":[14.50,0.2422,118.89],"JL/G1A-120/20":[15.07,0.2496,115.67],
+  "JL/G1A-150/8":[16.00,0.1990,144.76],"JL/G1A-150/20":[16.67,0.1981,145.68],"JL/G1A-150/25":[17.10,0.1940,148.86],
+  "JL/G1A-185/10":[18.00,0.1572,183.22],"JL/G1A-185/25":[18.90,0.1543,187.03],"JL/G1A-185/30":[18.88,0.1592,181.34],
+  "JL/G1A-210/10":[19.00,0.1411,204.14],"JL/G1A-210/25":[20.00,0.1380,209.02],"JL/G1A-240/30":[21.60,0.1181,244.29],
+  "JL/G1A-240/40":[21.66,0.1209,238.84],"JL/G1A-300/15":[23.01,0.0973,296.88],"JL/G1A-300/20":[23.43,0.0952,303.42],
+  "JL/G1A-300/25":[23.76,0.0944,306.21],"JL/G1A-300/40":[23.94,0.0961,300.09],"JL/G1A-300/50":[24.26,0.0964,299.54],
+  "JL/G1A-300/70":[25.20,0.0946,305.36],"JL/G1A-400/20":[26.91,0.0711,406.40],"JL/G1A-400/25":[26.64,0.0737,391.91],
+  "JL/G1A-400/35":[26.82,0.0739,390.88],"JL/G1A-400/50":[27.63,0.0724,399.72],"JL/G1A-400/65":[28.00,0.0724,398.94],
+  "JL/G1A-400/95":[29.14,0.0709,407.75],"JL/G1A-500/35":[30.00,0.0581,497.01],"JL/G1A-500/45":[30.00,0.0591,488.58],
+  "JL/G1A-500/65":[30.86,0.0580,498.97],"JL/G1A-630/45":[33.60,0.0463,623.45],"JL/G1A-630/55":[34.32,0.0452,639.92],
+  "JL/G1A-630/80":[34.82,0.0455,628.64],"JL/G1A-800/55":[38.40,0.0355,814.30],"JL/G1A-800/70":[38.58,0.0358,808.15],
+  "JL/G1A-800/100":[38.98,0.0364,795.17]
+};
+
+/* ===== 经济电流密度表 (DL/T 5582-2020) ===== */
+const ECO_J={
+  "铜线": [3.00,2.25,1.75],
+  "钢芯铝绞线、铝绞线": [1.65,1.15,0.90]
+};
+function getEcoJ(Tmax){ // 钢芯铝绞线默认
+  if(Tmax<3000)return 1.65;
+  if(Tmax<=5000)return 1.15;
+  return 0.90;
+}
+const ECO_J_COPPER={3000:3.00,5000:2.25,1e9:1.75};
+
+/* ===== 行定义 ===== */
+const ROWS = [
+  // --- 导线参数 ---
+  {key:"conductor",name:"导线型号",unit:"",op:"选择",
+   ctrl:{type:"select",values:Object.keys(CONDUCTOR_DB).sort((a,b)=>{const pa=a.split('/'),pb=b.split('/');const da=parseInt(pa[1].replace(/\D/g,''))-parseInt(pb[1].replace(/\D/g,''));if(da!==0)return da;return parseInt(pa[2])-parseInt(pb[2])}),value:"JL/G1A-240/40"},
+   note:"JL/G1A 系列钢芯铝绞线（GB/T 1179-2017）"},
+  {key:"cos_phi",name:"功率因数 cos(φ)",unit:"",op:"输入",eco:true,
+   ctrl:{type:"number",value:0.95,min:0.5,max:1,step:0.01},
+   note:"输电工程典型值 0.95~0.98"},
+  {key:"D",name:"外径",unit:"mm",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(2)},note:"由所选导线型号自动给出"},
+  {key:"S",name:"计算截面积",unit:"mm²",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(2)},note:"（铝截面，不含钢芯）"},
+  {key:"R20",name:"20℃时直流电阻",unit:"Ω/km",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(4)},note:"由所选导线型号自动给出"},
+  {key:"Rt",name:"导线交流电阻",unit:"Ω/m",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toExponential(5)},
+   note:"R′<sub>t</sub>=R<sub>20</sub>·[1+0.004·(T<sub>c</sub>−20)]·β"},
+  // --- 输入参数 ---
+  {key:"alpha_s",name:"表面吸热系数 α<sub>s</sub>",unit:"",op:"输入",
+   ctrl:{type:"number",value:0.46,min:0,step:0.01},
+   note:"光亮新线 0.35~0.46，旧线/涂黑防腐剂 0.9~0.95"},
+  {key:"E1",name:"表面辐射散热系数 E<sub>1</sub>",unit:"",op:"输入",
+   ctrl:{type:"number",value:0.43,min:0,step:0.01},
+   note:"光亮新线 0.23~0.43，旧线/涂黑防腐剂 0.9~0.95"},
+  {key:"Tc",name:"导体最高允许温度",unit:"℃",op:"输入",
+   ctrl:{type:"number",value:70,min:0,step:1},
+   note:"钢芯铝绞线一般 70℃，必要时 80℃；铝包钢芯铝绞线 80℃"},
+  {key:"Ta",name:"环境温度",unit:"℃",op:"输入",
+   ctrl:{type:"number",value:35,min:-50,step:1},
+   note:"最热月平均最高温度（参表 3-11）"},
+  {key:"V",name:"风速",unit:"m/s",op:"输入",
+   ctrl:{type:"number",value:0.5,min:0,step:0.1},
+   note:"常规线路 0.5 m/s，大跨越 0.6 m/s"},
+  {key:"J",name:"日照强度",unit:"W/m²",op:"输入",
+   ctrl:{type:"number",value:1000,min:0,step:50},
+   note:"晴天直射 1000 W/m²"},
+  // --- 散热功率 ---
+  {key:"Wr",name:"辐射散热功率 W<sub>R</sub>",unit:"W/m",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(6)},
+   note:"W<sub>R</sub>=π·D·E<sub>1</sub>·σ·[(T<sub>c</sub>+273)⁴−(T<sub>a</sub>+273)⁴]"},
+  {key:"Wf",name:"对流散热功率 W<sub>F</sub>",unit:"W/m",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(6)},
+   note:"W<sub>F</sub>=0.57·π·λ<sub>f</sub>·(T<sub>c</sub>−T<sub>a</sub>)·R<sub>e</sub><sup>0.485</sup>"},
+  {key:"Ws",name:"日照吸热功率 W<sub>S</sub>",unit:"W/m",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(4)},
+   note:"W<sub>S</sub>=α<sub>s</sub>·J<sub>s</sub>·D"},
+  // --- 载流量 ---
+  {key:"I",name:"允许载流量",unit:"A",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(4)},
+   note:"单根子导线载流量，I=√[(W<sub>R</sub>+W<sub>F</sub>−W<sub>S</sub>)/R′<sub>t</sub>]"},
+  // --- 系统参数 ---
+  {key:"U",name:"电压等级",unit:"kV",op:"选择",
+   ctrl:{type:"select",values:["35","66","110","220","330","500","750","1000"],value:"35"},
+   note:"系统标称电压"},
+  {key:"n",name:"分裂数",unit:"",op:"选择",
+   ctrl:{type:"select",values:["1","2","3","4","6","8"],value:"1"},
+   note:"每相分裂子导线数"},
+  {key:"altitude",name:"海拔高度",unit:"m",op:"输入",
+   ctrl:{type:"number",value:1500,min:0,step:100},
+   note:">1000 m 海拔需校验绝缘强度 (GB 50545-2010 第 3.0.3 条)"},
+  {key:"P",name:"输送容量",unit:"MW",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(6)},
+   note:"P=√3·U·I·n·cos(φ)"},
+  // --- 分隔行 ---
+  {key:"sep",isSep:true,name:"—— 按经济电流密度计算经济输送容量 ——"},
+  // --- 经济电流密度 ---
+  {key:"Tmax",name:"最大负荷利用小时数 T<sub>max</sub>",unit:"h",op:"选择",eco:true,
+   ctrl:{type:"select",values:["< 3000","3000 ~ 5000","> 5000"],value:"< 3000"},
+   note:"年最大负荷利用小时数，由负荷预测或运行经验确定"},
+  {key:"J_eco",name:"经济电流密度",unit:"A/mm²",op:"自动",eco:true,
+   ctrl:{type:"auto",fmt:v=>v.toFixed(2)},
+   note:"钢芯铝绞线：<3000h→1.65; 3000~5000h→1.15; >5000h→0.90"},
+  {key:"I_eco",name:"经济电流",unit:"A",op:"自动",eco:true,
+   ctrl:{type:"auto",fmt:v=>v.toFixed(2)},
+   note:"I<sub>eco</sub> = S × J，该截面可经济输送的电流"},
+  {key:"P_eco",name:"经济输送容量",unit:"MW",op:"自动",eco:true,
+   ctrl:{type:"auto",fmt:v=>v.toFixed(3)},
+   note:"P<sub>eco</sub>=√3·U·I<sub>eco</sub>·n·cosφ，该截面下的经济输送容量"},
+  // --- 压降线损 ---
+  {key:"sep_vd",isSep:true,name:"—— 电压降落与线损计算 ——"},
+  {key:"L",name:"线路长度",unit:"km",op:"输入",
+   ctrl:{type:"number",value:10,min:0.1,step:1},
+   note:"输电线路长度"},
+  {key:"D_eq",name:"相间几何均距",unit:"m",op:"输入",
+   ctrl:{type:"number",value:3.0,min:0.5,step:0.5},
+   note:"各相导线间几何平均距离；35kV约3m，110kV约5m，220kV约7.5m"},
+  {key:"X",name:"单位长度电抗",unit:"Ω/km",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(4)},
+   note:"X=0.1445·lg(D<sub>eq</sub>/r)+0.0157/n，r=D/2000"},
+  {key:"dU",name:"电压降落 ΔU",unit:"kV",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(3)},
+   note:"ΔU=√3·I<sub>eco</sub>·(R₂₀·cosφ+X·sinφ)·L/1000"},
+  {key:"dU_pct",name:"电压降落百分比",unit:"%",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(2)},
+   note:"ΔU%=ΔU/U·100"},
+  {key:"P_loss",name:"线损功率 ΔP",unit:"kW",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(2)},
+   note:"ΔP=3·I<sub>eco</sub>²·R₂₀·L/1000"},
+  {key:"loss_pct",name:"线损率",unit:"%",op:"自动",
+   ctrl:{type:"auto",fmt:v=>v.toFixed(3)},
+   note:"线损率 = ΔP / (√3·U·I<sub>eco</sub>·cosφ)"},
+];
+
+/* ===== 核心计算 ===== */
+function acResistance(R20,Tc){return (R20*1e-3)*(1+ALPHA_R*(Tc-20))*BETA}
+
+function wrRadiation(Dmm,E1,Tc,Ta){
+  return Math.PI*SIGMA*Dmm*1e-3*E1*(Math.pow(Tc+273,4)-Math.pow(Ta+273,4));
+}
+
+function wfConvection(Dmm,V,Tc,Ta){
+  const Tf=0.5*(Tc+Ta);
+  const lam=2.42e-2+7e-5*Tf, nu=1.32e-5+9.5e-8*Tf;
+  const Re=V*Dmm*1e-3/nu;
+  const Wf=0.57*Math.PI*lam*(Tc-Ta)*Math.pow(Re,0.485);
+  return{Wf,Re,Tfilm:Tf,lam_f:lam,nu};
+}
+
+function wsAbsorption(alpha_s,J_s,Dmm){return alpha_s*J_s*Dmm*1e-3}
+
+function ampacity(Rt,Wr,Wf,Ws){
+  const d=Wr+Wf-Ws; return d<=0||Rt<=0?0:Math.sqrt(d/Rt);
+}
+
+function transportCapacity(I_per_sub,n,UkV,cosphi){
+  return Math.sqrt(3)*UkV*1e3*I_per_sub*n*1e-6*cosphi;
+}
+
+function calcAll(inp){
+  const out={Wr:0,Wf:0,Ws:0,Rt:0,I:0,P:0,D:0,S:0,R20:0,Re:0,Tfilm:0,lam_f:0,nu:0,
+             P_design:0,J_eco:0,I_eco:0,P_eco:0,
+             X:0,dU:0,dU_pct:0,P_loss:0,loss_pct:0};
+  const m=CONDUCTOR_DB[inp.conductor];
+  if(!m)throw new Error("未知导线型号："+inp.conductor);
+  const [dmm,r20,smm2]=m;
+  out.D=dmm; out.S=smm2; out.R20=r20;
+  out.Rt=acResistance(r20,inp.Tc);
+  out.Wr=wrRadiation(dmm,inp.E1,inp.Tc,inp.Ta);
+  const conv=wfConvection(dmm,inp.V,inp.Tc,inp.Ta);
+  out.Wf=conv.Wf; out.Re=conv.Re; out.Tfilm=conv.Tfilm; out.lam_f=conv.lam_f; out.nu=conv.nu;
+  out.Ws=wsAbsorption(inp.alpha_s,inp.J,dmm);
+  out.I=ampacity(out.Rt,out.Wr,out.Wf,out.Ws);
+  out.P=transportCapacity(out.I,inp.n,inp.U,inp.cos_phi);
+
+  // 经济电流密度 — 按选定截面计算经济输送容量
+  const TmaxVals={"< 3000":2000,"3000 ~ 5000":4000,"> 5000":6000};
+  const Tmax=TmaxVals[inp.Tmax]||4000;
+  out.J_eco=getEcoJ(Tmax);
+  out.I_eco=out.S*out.J_eco;
+  out.P_eco=transportCapacity(out.I_eco,inp.n,inp.U,inp.cos_phi);
+
+  // 电压降落与线损
+  const L=inp.L||10;
+  const Deq=inp.D_eq||3.0;
+  const r_m=dmm/2000;                             // 导线半径 (m)
+  const sinphi=Math.sqrt(1-inp.cos_phi*inp.cos_phi);
+  out.X=0.1445*Math.log10(Deq/r_m)+0.0157/inp.n;  // Ω/km
+  const R_line=out.R20*L;                          // 总电阻 Ω
+  const X_line=out.X*L;                            // 总电抗 Ω
+  out.dU=Math.sqrt(3)*out.I_eco*(R_line*inp.cos_phi+X_line*sinphi)/1000; // kV
+  out.dU_pct=out.dU/inp.U*100;
+  out.P_loss=3*out.I_eco*out.I_eco*R_line/1000;    // kW
+  out.loss_pct=out.P_loss/(Math.sqrt(3)*inp.U*out.I_eco*inp.cos_phi)*100;
+
+  return out;
+}
+
+/* ===== UI ===== */
+const state={inputs:{conductor:"JL/G1A-240/40",alpha_s:0.46,E1:0.43,Tc:70,Ta:35,V:0.5,J:1000,U:35,n:1,altitude:1500,cos_phi:0.95,Tmax:"< 3000",L:10,D_eq:3.0},result:null};
+
+function buildRows(){
+  const tbody=document.getElementById("calcBody");
+  tbody.innerHTML="";
+  for(const r of ROWS){
+    if(r.isSep){
+      const tr=document.createElement("tr");tr.className="sep-row";
+      const td=document.createElement("td");td.colSpan=5;td.className="sep-label";td.textContent=r.name;
+      tr.appendChild(td);tbody.appendChild(tr);continue;
+    }
+    const tr=document.createElement("tr");tr.dataset.key=r.key;
+    if(r.eco){tr.className="eco-row";tr.dataset.eco="1"}
+
+    const tdName=document.createElement("td");tdName.className="col-name";tdName.innerHTML=r.name;tr.appendChild(tdName);
+
+    const tdParam=document.createElement("td");tdParam.className="col-param";
+    if(r.ctrl.type==="select"){
+      const sel=document.createElement("select");sel.className="select";
+      sel.dataset.key=r.key;
+      for(const v of r.ctrl.values){
+        const opt=document.createElement("option");opt.value=v;opt.text=v;
+        if(v===r.ctrl.value)opt.selected=true;
+        sel.appendChild(opt);
+      }
+      sel.addEventListener("change",()=>{
+        state.inputs[r.key]=sel.value;onParamChange();
+      });
+      tdParam.appendChild(sel);
+    }else if(r.ctrl.type==="number"){
+      const inp=document.createElement("input");inp.className="input";inp.type="number";
+      inp.dataset.key=r.key;
+      inp.value=r.ctrl.value;inp.min=r.ctrl.min;inp.step=r.ctrl.step;
+      inp.addEventListener("input",()=>{
+        const v=parseFloat(inp.value);
+        state.inputs[r.key]=isNaN(v)?0:v;onParamChange();
+      });
+      tdParam.appendChild(inp);
+    }else{
+      const span=document.createElement("span");span.className="auto-value";
+      if(r.eco)span.classList.add("auto-eco");
+      span.id="auto-"+r.key;span.textContent="—";tdParam.appendChild(span);
+    }
+    tr.appendChild(tdParam);
+
+    const tdUnit=document.createElement("td");tdUnit.className="col-unit";tdUnit.textContent=r.unit;tr.appendChild(tdUnit);
+    const tdOp=document.createElement("td");tdOp.className="col-op";tdOp.textContent=r.op;tr.appendChild(tdOp);
+    const tdNote=document.createElement("td");tdNote.className="col-note";tdNote.innerHTML=r.note||"";tr.appendChild(tdNote);
+    tbody.appendChild(tr);
+  }
+}
+
+const autoFmt={
+  D:v=>v.toFixed(2),S:v=>v.toFixed(2),R20:v=>v.toFixed(4),Rt:v=>v.toExponential(5),
+  Wr:v=>v.toFixed(6),Wf:v=>v.toFixed(6),Ws:v=>v.toFixed(4),I:v=>v.toFixed(4),P:v=>v.toFixed(6),
+  J_eco:v=>v.toFixed(2),I_eco:v=>v.toFixed(2),P_eco:v=>v.toFixed(3),
+  X:v=>v.toFixed(4),dU:v=>v.toFixed(3),dU_pct:v=>v.toFixed(2),P_loss:v=>v.toFixed(2),loss_pct:v=>v.toFixed(3)
+};
+
+function refreshUI(){
+  const r=state.result;if(!r)return;
+  for(const k of Object.keys(autoFmt)){
+    const el=document.getElementById("auto-"+k);
+    if(el)el.innerHTML=autoFmt[k](r[k]);
+  }
+  const sb=document.getElementById("statusbar"),st=document.getElementById("statusText");
+  if(r&&r.I>0){
+    sb.classList.remove("error");
+    st.innerHTML=`已更新 · I = <b>${r.I.toFixed(2)} A</b> · P = <b>${r.P.toFixed(3)} MW</b>
+       · Re = <b>${r.Re.toFixed(1)}</b> · I<sub>eco</sub> = <b>${r.I_eco.toFixed(1)} A</b> · P<sub>eco</sub> = <b>${r.P_eco.toFixed(2)} MW</b>
+       · ΔU = <b>${r.dU_pct.toFixed(2)}%</b> · ΔP = <b>${r.loss_pct.toFixed(3)}%</b>`;
+  }else if(r&&r.I===0){
+    sb.classList.add("error");
+    st.textContent="⚠ (Wr+Wf−Ws)≤0，无法满足热平衡方程。请检查输入参数。";
+  }
+}
+
+function onParamChange(){
+  try{state.result=calcAll(state.inputs);refreshUI()}catch(e){
+    const sb=document.getElementById("statusbar");sb.classList.add("error");
+    document.getElementById("statusText").textContent="⚠ "+e.message;
+  }
+}
+
+function wireToolbar(){
+  document.getElementById("btnReset").addEventListener("click",()=>{
+    state.inputs={conductor:"JL/G1A-240/40",alpha_s:0.46,E1:0.43,Tc:70,Ta:35,V:0.5,J:1000,U:35,n:1,altitude:1500,cos_phi:0.95,Tmax:"< 3000",L:10,D_eq:3.0};
+    buildRows();onParamChange();
+  });
+  document.getElementById("btnExport").addEventListener("click",()=>{
+    const lines=[];lines.push("导线输送容量计算结果");lines.push("========================================");
+    for(const r of ROWS){
+      if(r.isSep){lines.push("");lines.push("  ### "+r.name+" ###");continue}
+      const v=r.ctrl.type==="auto"?(document.getElementById("auto-"+r.key)?.textContent??"—"):(state.inputs[r.key]??"");
+      const u=r.unit?" "+r.unit:"";lines.push(`${r.name.replace(/<[^>]+>/g,"")}：${v}${u} (${r.op})`);
+    }
+    const txt=lines.join("\n");
+    (navigator.clipboard?.writeText(txt)||Promise.reject()).then(()=>{
+      document.getElementById("statusText").textContent="已复制到剪贴板 ✓";setTimeout(refreshUI,1500);
+    },()=>{
+      const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy")}catch(e){};ta.remove();
+      document.getElementById("statusText").textContent="已复制 ✓";setTimeout(refreshUI,1500);
+    });
+  });
+}
+
+/* ===== 表 3-12 (不变) ===== */
+const REF_TABLE_12=[
+  ["50/30","12/2.32","7/2.32",11.60,0.5693,234,263,199,233],["70/40","12/2.72","7/2.72",13.60,0.4141,250,275,225,250],
+  ["95/15","26/2.15","7/1.67",13.61,0.3058,332,374,281,331],["95/20","7/4.16","7/1.85",13.87,0.3019,335,378,284,335],
+  ["95/25","12/3.20","7/3.20",16,0.2992,349,394,295,349],["120/7","18/2.90","1/2.90",14.5,0.2422,379,427,321,378],
+  ["120/20","26/2.38","7/1.85",15.07,0.2496,377,425,319,376],["120/25","7/4.72","7/2.10",15.74,0.2345,393,444,332,393],
+  ["120/70","12/3.60","7/3.60",18,0.2364,404,458,341,405],["150/8","18/3.20","1/3.20",16,0.1989,428,484,362,428],
+  ["150/20","24/2.78","7/1.85",16.67,0.198,433,490,366,434],["150/25","26/2.70","7/2.10",17.1,0.1939,441,499,372,441],
+  ["150/35","30/2.50","7/2.50",17.5,0.1962,441,499,372,441],["185/10","18/3.60","1/3.60",18,0.1572,495,561,418,496],
+  ["185/25","24/3.15","7/2.10",18.9,0.1542,506,574,427,507],["185/30","26/2.98","7/2.32",18.88,0.1592,498,565,420,499],
+  ["185/45","30/2.80","7/2.80",19.6,0.1564,508,576,427,509],["210/10","18/3.80","1/3.80",19,0.1411,530,601,446,531],
+  ["210/25","24/3.33","7/2.22",19.98,0.138,543,616,456,544],["210/35","26/3.22","7/2.50",20.38,0.1363,549,623,461,550],
+  ["210/50","30/2.98","7/2.98",20.86,0.1381,548,623,461,550],["240/30","24/3.60","7/2.40",21.6,0.1181,598,680,502,600],
+  ["240/40","26/3.42","7/2.66",21.66,0.1209,592,672,496,593],["240/55","30/3.20","7/3.20",22.4,0.1198,599,682,503,601],
+  ["300/15","42/3.00","7/1.67",23.01,0.09724,726,833,602,731],["300/20","45/2.93","7/1.95",23.43,0.0952,679,773,569,682],
+  ["300/25","48/2.85","7/2.22",23.76,0.09433,672,764,563,674],["300/40","24/3.99","7/2.66",23.94,0.09614,680,774,569,682],
+  ["300/50","26/3.83","7/2.98",24.26,0.09636,681,776,570,684],["300/70","30/3.60","7/3.60",25.2,0.09463,694,792,580,697],
+  ["400/20","42/3.51","7/1.95",26.91,0.07104,812,927,677,816],["400/25","45/3.33","7/2.22",26.64,0.0737,795,909,664,800],
+  ["400/35","48/3.22","7/2.50",26.82,0.07389,782,892,653,786],["400/50","54/3.07","7/3.07",27.63,0.07232,796,909,665,801],
+  ["400/65","26/4.42","7/3.44",28,0.07236,814,930,678,818],["400/95","30/4.16","19/2.50",29.14,0.07087,831,951,691,836],
+  ["500/35","45/3.75","7/2.50",30,0.05812,921,1055,766,927],["500/45","48/3.60","7/2.80",30,0.05912,898,1029,748,904],
+  ["500/65","54/3.44","7/3.44",30.96,0.0576,917,1050,763,924],["630/45","45/4.20","7/2.80",33.6,0.04633,1040,1193,863,1049],
+  ["630/55","48/4.12","7/3.20",34.32,0.04514,1059,1216,879,1069],["630/80","54/3.87","19/2.32",34.82,0.04551,1060,1218,879,1070],
+  ["720/50","45/4.53","7/3.02",36.23,0.03984,1140,1311,944,1151],["800/55","45/4.80","7/3.20",38.4,0.03547,1222,1408,1010,1235],
+  ["800/70","48/4.63","7/3.60",38.58,0.03574,1220,1406,1008,1233],["800/100","54/4.33","19/2.60",38.98,0.03635,1216,1403,1002,1229],
+];
+function buildRefTable12(){
+  const th=document.getElementById("refHead"),tb=document.getElementById("refBody");
+  ["标称截面<br>铝/钢 (mm²)","结构, 根/直径 (mm) — 铝","结构, 根/直径 (mm) — 钢","外径 (mm)","直流电阻 (Ω/km)",
+   "T<sub>a</sub>=25℃ T<sub>c</sub>=70℃<br>(A)","T<sub>a</sub>=25℃ T<sub>c</sub>=80℃<br>(A)",
+   "T<sub>a</sub>=35℃ T<sub>c</sub>=70℃<br>(A)","T<sub>a</sub>=35℃ T<sub>c</sub>=80℃<br>(A)"]
+  .forEach(h=>{const td=document.createElement("th");td.innerHTML=h;th.appendChild(td)});
+  for(const r of REF_TABLE_12){
+    const tr=document.createElement("tr"),code="JL/G1A-"+r[0].replace("/","/");
+    if(code===state.inputs.conductor)tr.className="hl-row";
+    r.forEach(v=>{const td=document.createElement("td");td.innerHTML=v;tr.appendChild(td)});
+    tb.appendChild(tr);
+  }
+}
+
+const CITY_T=[
+  ["哈尔滨",27.7],["长春",27.9],["海拉尔",25.4],["北京",31.1],["沈阳",29.3],["太原",29.9],["西安",30.9],["天津",30.6],
+  ["大同",28.2],["神木",30.8],["重庆",32.7],["昆明",23.9],["济南",32.3],["合肥",32.6],["南京",32.5],["上海",31.7],
+  ["杭州",33.9],["长沙",34.1],["拉萨",21.8],["哈密",34.8],["武汉",33.8],["厦门",32.1],["广州",32.2],["贵阳",28.5],
+  ["南宁",33.5],["呼和浩特",28.0],["乌鲁木齐",32.3],["南昌",34.0],["银川",29.4],["准格尔",29.7]
+];
+function buildCityTable(){
+  const tb=document.getElementById("cityTbl"),rows=Math.ceil(CITY_T.length/3);
+  for(let i=0;i<rows;i++){
+    const tr=document.createElement("tr");
+    for(let j=0;j<3;j++){
+      const idx=j*rows+i;
+      const td1=document.createElement("td");td1.className="left";td1.textContent=idx<CITY_T.length?CITY_T[idx][0]:"";tr.appendChild(td1);
+      const td2=document.createElement("td");
+      if(idx<CITY_T.length){
+        td2.textContent=CITY_T[idx][1]+" ℃";td2.style.cursor="pointer";td2.style.color="#22d3ee";
+        td2.title="点击填入环境温度";
+        td2.addEventListener("click",()=>{
+          const inp=document.querySelector('tr[data-key="Ta"] input.input');
+          if(inp){inp.value=CITY_T[idx][1];inp.dispatchEvent(new Event("input",{bubbles:true}));}
+        });
+      }
+      tr.appendChild(td2);
+    }
+    tb.appendChild(tr);
+  }
+}
+
+function refreshRef12Highlight(){
+  document.querySelectorAll("#refBody tr").forEach((tr,i)=>{
+    const code="JL/G1A-"+REF_TABLE_12[i][0].replace("/","/");
+    if(code===state.inputs.conductor)tr.className="hl-row";else tr.classList.remove("hl-row");
+  });
+}
+
+function init(){
+  buildRows();buildRefTable12();buildCityTable();wireToolbar();
+  document.querySelectorAll('select.select').forEach(sel=>{
+    sel.addEventListener("change",()=>{
+      const tr=sel.closest("tr");if(tr&&tr.dataset.key==="conductor")refreshRef12Highlight();
+    });
+  });
+  onParamChange();
+}
+
+document.addEventListener("DOMContentLoaded",init);
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "\u5207\u6362\u5230\u6697\u8272\u4e3b\u9898" : "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/导线输送容量计算.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>

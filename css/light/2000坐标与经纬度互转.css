@@ -1,0 +1,118 @@
+/* ============================================================
+   坐标互转工具 · 浅色工程风主题
+   统一设计规范（两主题一致）：
+   圆角 页头/卡片 10px · 按钮/输入框/表格容器/提示条 8px
+   页头 = 深蓝工程渐变横幅 · 表头 = #eaf1f8 + #1f4e79
+   ============================================================ */
+:root{
+  --bg:#eef2f7;--bg2:#ffffff;--card:#ffffff;--card2:#f5f8fb;
+  --primary:#2563eb;--primary-d:#1d4ed8;--primary-l:#dbeafe;
+  --text:#1e293b;--text2:#64748b;--text3:#94a3b8;--border:#d5dde8;
+  --green:#16a34a;--green-l:#dcfce7;--amber:#d97706;--amber-l:#fef3c7;--red:#dc2626;--red-l:#fee2e2;
+  --radius:10px;--r-md:8px;
+  --th-bg:#eaf1f8;--th-tx:#1f4e79;
+  --focus-ring:0 0 0 2px rgba(31,78,121,.15);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);
+  color:var(--text);line-height:1.6;min-height:100vh;padding:20px}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#b0b8c8;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+.wrap{max-width:920px;margin:0 auto}
+
+/* ===== 页头（统一横幅） ===== */
+header{text-align:left;margin-bottom:16px;
+  background:linear-gradient(120deg,#2F5496,#3b6cb5);
+  border:none;border-radius:var(--radius);padding:14px 18px}
+header h1{font-size:20px;font-weight:700;letter-spacing:1px;color:#fff;text-shadow:none}
+header p{color:rgba(255,255,255,.82);font-size:12.5px;margin-top:6px}
+.badge{display:inline-block;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:.72rem;padding:2px 10px;border-radius:20px;font-weight:600;margin-left:8px;vertical-align:middle}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.tabs{display:flex;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:4px;margin-bottom:20px}
+.tab{flex:1;padding:10px 16px;text-align:center;border:none;background:none;border-radius:var(--r-md);font-size:.9rem;font-weight:600;color:var(--text2);cursor:pointer;transition:all .2s}
+.tab.active{background:var(--th-bg);color:var(--th-tx);box-shadow:var(--shadow)}
+.dir-toggle{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.dir-btn{flex:1;min-width:200px;padding:11px 16px;border:1px solid var(--border);background:var(--card);border-radius:var(--r-md);cursor:pointer;font-size:.9rem;font-weight:600;color:var(--text2);transition:all .2s;text-align:center}
+.dir-btn.active{border-color:var(--primary);background:var(--primary-l);color:var(--primary)}
+.dir-btn .arrow{font-size:1.2em;margin:0 4px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.82rem;font-weight:600;color:var(--text2);margin-bottom:6px}
+.field label .hint{font-weight:400;color:var(--text3);font-size:.78rem}
+.input-row{display:flex;gap:12px;flex-wrap:wrap}
+.input-group{flex:1;min-width:140px}
+input[type=text],input[type=number],select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-md);font-size:.9rem;font-family:inherit;color:var(--text);background:var(--bg2);transition:border-color .2s;outline:none}
+input::placeholder,textarea::placeholder{color:#94a3b8}
+select option{background:#fff;color:var(--text)}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:var(--focus-ring)}
+textarea{resize:vertical;min-height:120px;font-family:"Consolas","Monaco",monospace;font-size:.85rem}
+.input-suffix{position:relative}
+.input-suffix .tag{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--text3);pointer-events:none;background:var(--bg);padding:1px 6px;border-radius:4px}
+.dms-row{display:flex;gap:6px;align-items:center}
+.dms-row input{text-align:center}
+.dms-row .lbl{font-size:.75rem;color:var(--text3);font-weight:600}
+.radio-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.radio-row label{display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;margin:0}
+.radio-row input[type=radio]{cursor:pointer}
+/* 手动指定控件行（隐藏/显示切换） */
+.manual-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.manual-row .zone-sel{max-width:280px;width:auto;flex:1;min-width:200px}
+.manual-row input[type=number]{max-width:120px}
+.manual-row .tip{margin:0}
+
+/* ===== 按钮（统一：8px 18px / 圆角 8px / 13.5px / 600） ===== */
+.btn{padding:8px 18px;border:1px solid transparent;border-radius:var(--r-md);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--th-tx);color:#fff}
+.btn-primary:hover{background:var(--primary)}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{background:#fff;color:var(--text2);border-color:var(--border)}
+.btn-ghost:hover{border-color:var(--th-tx);color:var(--th-tx)}
+.result-box{margin-top:20px}
+.result-box.hidden{display:none}
+.result-card{background:linear-gradient(135deg,#f0f7ff,#eef2ff);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px}
+.result-card .r-label{font-size:.78rem;color:var(--text2);font-weight:600;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.result-card .r-value{font-size:1.35rem;font-weight:700;color:var(--text);font-family:"Consolas","Monaco",monospace;letter-spacing:-.3px}
+.result-card .r-dms{font-size:.82rem;color:var(--text2);margin-top:4px;font-family:"Consolas","Monaco",monospace}
+.copy-btn{background:none;border:none;color:var(--primary);font-size:.75rem;cursor:pointer;padding:2px 8px;border-radius:4px}
+.copy-btn:hover{background:var(--primary-l)}
+.copy-group{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.copy-group .cg-label{font-size:.82rem;font-weight:600;color:var(--text2)}
+.copy-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-md);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid transparent}
+.copy-tag .ct-prev{font-family:"Consolas","Monaco",monospace;font-weight:400;font-size:.78rem;opacity:.85}
+.copy-tag.primary{background:var(--th-tx);color:#fff}
+.copy-tag.primary:hover{background:var(--primary)}
+.copy-tag.secondary{background:#fff;color:var(--th-tx);border:1px solid var(--border)}
+.copy-tag.secondary:hover{border-color:var(--th-tx)}
+.copy-tag.copied{background:var(--green)!important;border-color:var(--green)!important;color:#fff!important}
+.info-bar{background:var(--primary-l);border:1px solid var(--primary-l);border-radius:var(--r-md);padding:10px 14px;margin-bottom:16px;font-size:.82rem;color:var(--primary-d);display:flex;align-items:center;gap:8px}
+.info-bar.warn{background:var(--amber-l);color:var(--amber)}
+.info-bar.err{background:var(--red-l);color:var(--red)}
+.info-bar.ok{background:var(--green-l);color:var(--green)}
+.info-bar .icon{font-size:1rem}
+.result-table-wrap{overflow-x:auto;margin-top:12px;border:1px solid var(--border);border-radius:var(--r-md)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{background:var(--th-bg);padding:9px 12px;text-align:left;font-weight:600;color:var(--th-tx);font-size:12.5px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0}
+td{padding:7px 12px;border-bottom:1px solid var(--border);font-family:"Consolas","Monaco",monospace}
+tr:hover{background:#f0f5fb}
+td.num{text-align:right}
+.tip{font-size:.78rem;color:var(--text3);margin-top:6px}
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.checkbox-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.checkbox-row label{display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;margin:0;font-size:.85rem}
+.checkbox-row input[type=checkbox]{cursor:pointer;width:auto}
+.result-cols{display:flex;flex-wrap:wrap;gap:12px}
+.result-cols .result-card{flex:1;min-width:180px}
+@media(max-width:640px){.cols-2{grid-template-columns:1fr}.dir-btn{min-width:100%}.result-cols .result-card{min-width:100%}}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.footnote{text-align:center;color:var(--text3);font-size:.78rem;margin-top:12px;line-height:1.8}
+
+/* ===== 主题切换按钮（仅独立打开工具时显示） ===== */
+.theme-toggle{position:fixed;right:14px;bottom:14px;z-index:999;width:36px;height:36px;
+  border-radius:50%;cursor:pointer;font-size:16px;line-height:1;
+  background:#fff;border:1px solid #b8c7d6;color:#1f4e79;
+  box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.theme-toggle:hover{border-color:#1f4e79}

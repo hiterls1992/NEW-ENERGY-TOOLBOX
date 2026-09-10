@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="5cM0MVrpa1tJwGnPyg3ngD">
+<head data-page-node-id="6qdzqAbKy8phsFQS0UGTbn">
+<meta charset="UTF-8" data-page-node-id="uGwPmVAcROhA1uX7BCz3NR">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="ssRjQotGN8jk5nAxWXe44O">
+<title>雪压风压查询</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/雪压风压查询.css" data-page-node-id="BnAJSNMFbuxwcoVpnsFpjv">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/雪压风压查询.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-page-node-id="iBwPex7xnAzGeuSG8hcxAY">
+<div class="wrap" data-page-node-id="gNA0Myevp3myGoGNrscqlB">
+
+  <!-- ===== 页头横幅 ===== -->
+  <header data-page-node-id="leVCw1iaayA3yB6lBANeuY">
+    <h1 data-page-node-id="vNi8FGgky24GDMZaBCdf9p">雪压风压查询</h1>
+    <p class="sub" data-page-node-id="Ubj7BylmpFQG9axdhF7xiP">GB 50009-2012《建筑结构荷载规范》表 E.5 · 全国各城市雪压、风压（R=10/50/100）与基本气温 · 共 667 地区</p>
+  </header>
+
+  <!-- ===== ① 查询条件 ===== -->
+  <div class="panel" data-page-node-id="VSqRbPw0Bk6gJnyCUnwroT">
+    <div class="panel-title" data-page-node-id="3HKicDADxhegxEMllZW3xo">① 查询条件（省份 → 城市级联选择）</div>
+    <div class="panel-body" data-page-node-id="exKg2AdQqqsIfKaP3dNXbs">
+      <div class="cond-row" data-page-node-id="W7x2t3zMtIs4Eo2nDDyWME">
+        <div class="cond-item" data-page-node-id="qRNIQ7fgYEGxXRrs1vahSl">
+          <label for="provSel" data-page-node-id="OjeSFnZpohpPhtGWv1mY65">省 / 直辖市 / 自治区</label>
+          <select id="provSel" data-page-node-id="UtSwujuG0t3DI9FdxsNDwN"></select>
+        </div>
+        <div class="cond-item" data-page-node-id="QmpFGVUimaFxHoXJlQckGP">
+          <label for="citySel" data-page-node-id="FMvyH9guHGCEBIgpdfPb8l">城市 / 地区</label>
+          <select id="citySel" data-page-node-id="NYozn8b05WFslOjUvyZgfV"></select>
+        </div>
+      </div>
+      <div class="search-row" data-page-node-id="1ilyZ1F5ulLsuf7CI9drb4">
+        <input type="text" id="searchBox" placeholder="输入城市名 / 省份名关键字，点击搜索过滤下方全部数据" spellcheck="false" data-page-node-id="kCq5KwecekQvqnNK8EREVi">
+        <button class="btn btn-primary" id="btnSearch" data-page-node-id="CSjji4I4JfGvUHSNwG2qpe">搜索</button>
+        <button class="btn btn-ghost" id="btnReset" data-page-node-id="ZQIIQQTYBYR9hYPKruGyHZ">清除筛选</button>
+      </div>
+      <div class="msg" id="condMsg" data-page-node-id="vLUXxPzDoZ4eo1oLeK0oIB"></div>
+    </div>
+  </div>
+
+  <!-- ===== ② 全部数据浏览 ===== -->
+  <div class="panel" data-page-node-id="QokICcD2s6ljTuFgoqHjwC">
+    <div class="panel-title" data-page-node-id="stT6863utRB65RTxMDP5q0">② 全部数据浏览 <span class="pt-sub" id="tableCount" data-page-node-id="lHO8WOPHP1Zrc9hbOiBHQ1"></span></div>
+    <div class="panel-body" data-page-node-id="TWt4QqBBXDpPnBPfgbrwV9">
+      <div class="table-wrap" data-page-node-id="C639GakSGIxr95z9ZdmAYg">
+        <table id="dataTable" data-page-node-id="sfDJhBMqOxiuDyGCllNHp5">
+          <thead data-page-node-id="7Nl7rFB1XsiVwP6ILrsshA">
+            <tr data-page-node-id="Te5VfYXuWRZpBdFxzy1Z4u">
+              <th data-page-node-id="EIbLvbSIVfpL2j5RbhtaP0">省/区</th><th data-page-node-id="qbIZLlyucCX7rISYGsJuV6">城市</th><th data-page-node-id="TelDPU21AgYU5X6c6Zjs7q">海拔<br data-page-node-id="Jr2JiU49G3NA7wSDTLlkXh">(m)</th>
+              <th data-page-node-id="m6CpD41XIJ722hFVySaLmy">风压<br data-page-node-id="7oeYEGHFEEC2odL5j38FxB">R=10</th><th data-page-node-id="TuTMCCM6s9HZnHbFPayvP2">风压<br data-page-node-id="su6lx8B4paXzrnpN2MykIN">R=50</th><th data-page-node-id="1AiaUw1BiAZmUDZ2GrAwac">风压<br data-page-node-id="p5SjFe8W5W4MlvfZ87ZRoA">R=100</th>
+              <th data-page-node-id="Wt8LzHdsGHp4TfCKy57lWq">雪压<br data-page-node-id="FhtolVR00Y4vnXzR9CjpRk">R=10</th><th data-page-node-id="jLANl51X4p1FMj5cJCfeaP">雪压<br data-page-node-id="G1d1Q2EFliuJiC436Uvwnp">R=50</th><th data-page-node-id="sb1HxcpD5ePBcIpYOf27Gb">雪压<br data-page-node-id="6nGFtSQSeiVD5ONFfarxbJ">R=100</th>
+              <th data-page-node-id="IoLelwc1JopGqaYRgDFzRW">气温<br data-page-node-id="gWPgP0Hx7glCL7OPExvlqj">最低℃</th><th data-page-node-id="9c57VAG9IIE0C1BQE9YUx7">气温<br data-page-node-id="f7ZcpLej7t93K8w4ph1sSQ">最高℃</th><th data-page-node-id="MaScBhHbq68HWsBWmx7dlc">雪荷载<br data-page-node-id="aA1wj2F7IEqirG2pP91HFK">分区</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" data-page-node-id="wXMGrhDx9EfPDUnCshUFLf"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ③ 查询结果 ===== -->
+  <div class="panel" id="resultPanel" data-page-node-id="TQwLMAai2G7RriMvqqxtBn">
+    <div class="panel-title" data-page-node-id="5oQG1hPoaWuEf2R7KV8oG3">③ 查询结果 <span class="pt-sub" id="resultTitle" data-page-node-id="rDjjNd4x9lbHIQHx7Iq7Gw">—</span></div>
+    <div class="panel-body" data-page-node-id="Z8hiWScDhoAHIrb6bo3BFD">
+      <div class="kv-block" data-page-node-id="sRLm8IMKpZk2C8XZpCrV8O">
+        <div class="kv-head" data-page-node-id="Mywv5KOjOWqGUcBzW6jtTD">基本参数</div>
+        <div class="kv-grid" data-page-node-id="tMVXEmdPF91s9R4UYoAdY0">
+          <div class="kv-card" data-page-node-id="Gywx2d474Dkj3tufBNPLk6"><div class="kv-lab" data-page-node-id="ftLSokZKZypAF53TCN2pTz">海拔高度</div><div class="kv-val" id="rAlt" data-page-node-id="pAc5TKCwfPclD5kwdpVjJo">—</div><div class="kv-note" data-page-node-id="RFaS88AainblesVzVef8Tn">m</div></div>
+          <div class="kv-card" data-page-node-id="KGxBpj3su8igNk52CSLWtt"><div class="kv-lab" data-page-node-id="2L5YTDaEtsJnEjIeIDZGZK">基本气温 · 最低</div><div class="kv-val" id="rTmin" data-page-node-id="VC1CrSsftvl5RTZFbxskDK">—</div><div class="kv-note" data-page-node-id="4jTm2GUoJYV8Snzzvb1pR9">℃</div></div>
+          <div class="kv-card" data-page-node-id="xVlEObjo9VuTxthyReF3GU"><div class="kv-lab" data-page-node-id="3aVQViSdrDlmGdESTKujNE">基本气温 · 最高</div><div class="kv-val" id="rTmax" data-page-node-id="WqdE7L65Rsox0hEvczvcn1">—</div><div class="kv-note" data-page-node-id="I7ssIaMlKpLPdj6EpWHUIZ">℃</div></div>
+          <div class="kv-card" data-page-node-id="KSgVQtQPornX2KG4048wR6"><div class="kv-lab" data-page-node-id="dKIHIm7rQeY8FXdFGaBDJQ">雪荷载准永久值系数分区</div><div class="kv-val" id="rZone" data-page-node-id="iBSYKVMH3H0HlDQGbjxLRm">—</div><div class="kv-note" data-page-node-id="OoDPQXS4zRmPHIrGSfaP6R">Ⅰ ~ Ⅴ 区</div></div>
+        </div>
+      </div>
+      <div class="kv-block" data-page-node-id="mR37gYpp3LbgsGC0HzHw2j">
+        <div class="kv-head" data-page-node-id="EmmcH0KVXxVIRkUDzJJxVe">风压（kN/m²）</div>
+        <div class="kv-grid" data-page-node-id="IKOEDAiSwZMzupdjAz6J81">
+          <div class="kv-card" data-page-node-id="Q79ctKyRd9ehaMg4A696GP"><div class="kv-lab" data-page-node-id="xBOc5U6e2kTFTdCJArK0hz">风压 R=10</div><div class="kv-val" id="rW10" data-page-node-id="V8MAmJqjQMh3cnBDlf0bNw">—</div><div class="kv-note" data-page-node-id="iL7FG8QKm3SkoarxVaGpLt">10 年一遇</div></div>
+          <div class="kv-card"><div class="kv-lab">风压 R=25</div><div class="kv-val" id="rW25">—</div><div class="kv-note">25 年一遇 · 按 E.3.4 插值</div></div>
+          <div class="kv-card kv-hl" data-page-node-id="6AGZVcw3eQKDD9Dkk98eVI"><div class="kv-lab" data-page-node-id="4UTzw78AVXDm7T5jjWnbAV">风压 R=50</div><div class="kv-val" id="rW50" data-page-node-id="3GWNvvQ7Plj4t3C3cdk8Pc">—</div><div class="kv-note" data-page-node-id="0T3REEYiBsqeR9ZRuSS8wI">50 年一遇（规范基本风压）</div></div>
+          <div class="kv-card" data-page-node-id="Id6yuM29OKOcxCKhNCvV0S"><div class="kv-lab" data-page-node-id="u1A7K4tu3Quwi0aXrxCZUe">风压 R=100</div><div class="kv-val" id="rW100" data-page-node-id="ZGcoa01wuP2xcGQlr4KXWC">—</div><div class="kv-note" data-page-node-id="kuU3AU0vpQZh8G4rwj25eY">100 年一遇</div></div>
+        </div>
+      </div>
+      <div class="kv-block" data-page-node-id="znGZs8l1DJUy5hTH6ABAlC">
+        <div class="kv-head" data-page-node-id="40BlAEYpS3PK0J0FAQy0HP">雪压（kN/m²）</div>
+        <div class="kv-grid" data-page-node-id="8g7yxZH5h822WeAvYCUE7F">
+          <div class="kv-card" data-page-node-id="9p7aELHB3XLAKTMRAOE0ca"><div class="kv-lab" data-page-node-id="gJj8BtyHD0b2PsgBatNDI4">雪压 R=10</div><div class="kv-val" id="rS10" data-page-node-id="K03LOfS0AHmupS34DrZFXZ">—</div><div class="kv-note" data-page-node-id="CPPR668HPi1NHg19qBmxYo">10 年一遇</div></div>
+          <div class="kv-card"><div class="kv-lab">雪压 R=25</div><div class="kv-val" id="rS25">—</div><div class="kv-note">25 年一遇 · 按 E.3.4 插值</div></div>
+          <div class="kv-card kv-hl" data-page-node-id="uZk9BYpDtVHjvxDbLXSr3J"><div class="kv-lab" data-page-node-id="12FmUITZU6VACFp1SmXLXO">雪压 R=50</div><div class="kv-val" id="rS50" data-page-node-id="bQFMcdF5PNg0GGVEIDPZrV">—</div><div class="kv-note" data-page-node-id="zaJ87LyYiK0fHG4ufYNAud">50 年一遇（规范基本雪压）</div></div>
+          <div class="kv-card" data-page-node-id="PlwGcZhqQ2d0j548dGEHGL"><div class="kv-lab" data-page-node-id="x9jLTTMh5fkf4mjIvL3hIY">雪压 R=100</div><div class="kv-val" id="rS100" data-page-node-id="l8PoorAwulliKWkJeFSAlM">—</div><div class="kv-note" data-page-node-id="kS00osBPNDpY3WznI3P1vK">100 年一遇</div></div>
+        </div>
+      </div>
+      <div class="btn-row" data-page-node-id="xhn4tTDea2NDxFdCvYUtnA">
+        <button class="btn btn-primary" id="btnCopy" data-page-node-id="3Ih14nLN0sYMc0YDiDPXyP">复制查询结果</button>
+      </div>
+      <div class="msg" id="copyMsg" data-page-node-id="IKn5jafN0xA7zmH4jI5MEZ"></div>
+    </div>
+  </div>
+
+  <!-- ===== 说明 ===== -->
+  <div class="panel" data-page-node-id="soC5OOR0xUH80FRNxQiyRq">
+    <div class="panel-title" data-page-node-id="c37r7mRVtgqg4JBvylnP5z">数据说明</div>
+    <div class="panel-body" data-page-node-id="tKo0qSJO0hCsoCiNu1mEjl">
+      <div class="tip" style="margin-top:0;" data-page-node-id="3NEOH0NF3edcyDzcUNwFHo">
+        <b data-page-node-id="fGGd8dEAOUQ60m4JGFCXur">说明：</b>R=10 / 50 / 100 分别为重现期 10 年、50 年、100 年一遇；一般建筑取 R=50（即规范基本风压 / 基本雪压）。<br data-page-node-id="VK1oBflCdumnRNJaAEAcQo">
+        <b>R=25 取值：</b>按 GB 50009-2012 附录 E 公式 (E.3.4) 由 R=10 与 R=100 插值确定：
+        　x<sub>R</sub> = x<sub>10</sub> + (x<sub>100</sub> − x<sub>10</sub>)·(lnR / ln10 − 1)，结果保留 2 位小数，仅在查询结果中显示；任一端点缺失时显示 "—"。<br>
+        <b data-page-node-id="R2MDuksG8uhp23O9BSbcIK">缺失值：</b>表中 "—" 表示规范表 E.5 未给出该值（如部分南方城市无雪压记录）。<br data-page-node-id="DjEHkC0cN2qlHY0N7tdj3d">
+        <b data-page-node-id="8NZbFrKvpBGRIYB5Jj5AyH">数据来源：</b>GB 50009-2012《建筑结构荷载规范》附录 E 表 E.5，本地数据文件 data/GB50009-E5-data.js。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../data/GB50009-E5-data.js"></script>
+<script>
+(function(){
+"use strict";
+
+var $ = function(id){ return document.getElementById(id); };
+var DATA = (typeof GB50009_E5 !== "undefined") ? GB50009_E5 : [];
+var COL = { PROV:0, CITY:1, ALT:2, W10:3, W50:4, W100:5, S10:6, S50:7, S100:8, TMIN:9, TMAX:10, ZONE:11 };
+
+/* ==================== 级联下拉 ==================== */
+function fillProvs(){
+  var seen = {}, provs = [];
+  DATA.forEach(function(r){
+    if (!seen[r[COL.PROV]]){ seen[r[COL.PROV]] = true; provs.push(r[COL.PROV]); }
+  });
+  provs.sort(function(a,b){ return a.localeCompare(b, "zh-Hans-CN"); });
+  var sel = $("provSel");
+  sel.innerHTML = '<option value="">— 请选择省份 —</option>' +
+    provs.map(function(p){ return '<option value="' + p + '">' + p + '</option>'; }).join("");
+}
+function fillCities(prov){
+  var sel = $("citySel");
+  sel.innerHTML = '<option value="">— 请选择城市 —</option>';
+  if (!prov) return;
+  DATA.forEach(function(r){
+    if (r[COL.PROV] === prov){
+      var opt = document.createElement("option");
+      opt.value = r[COL.CITY];
+      opt.textContent = r[COL.CITY];
+      sel.appendChild(opt);
+    }
+  });
+}
+
+/* ==================== 结果渲染 ==================== */
+function fmt(v){ return (v === "-" || v === "" || v === undefined) ? "—" : v; }
+
+var CURRENT = null;   // 当前选中行（供复制）
+var appliedKw = "";   // 已应用的搜索关键字（点击"搜索"后生效）
+
+/* 清空查询结果面板 */
+function resetResult(){
+  CURRENT = null;
+  $("resultTitle").textContent = "—";
+  ["rAlt","rTmin","rTmax","rZone","rW10","rW25","rW50","rW100","rS10","rS25","rS50","rS100"]
+    .forEach(function(id){ $(id).textContent = "—"; });
+}
+
+/* R=25 插值：GB 50009-2012 附录 E 公式 (E.3.4)
+ * x_R = x_10 + (x_100 − x_10)·(lnR/ln10 − 1)，保留 2 位小数；
+ * 任一端点缺失时返回 "—"（仅用于 ③ 查询结果展示，不改动 ② 数据表） */
+function interpR25(v10, v100){
+  if (v10 === "-" || v100 === "-" || v10 === "" || v100 === "" ||
+      v10 === undefined || v100 === undefined) return "—";
+  var a = Number(v10), b = Number(v100);
+  if (!isFinite(a) || !isFinite(b)) return "—";
+  return (a + (b - a) * (Math.log(25) / Math.log(10) - 1)).toFixed(2);
+}
+
+function showRow(row){
+  CURRENT = row;
+  $("resultTitle").textContent = row[COL.PROV] + " · " + row[COL.CITY];
+  $("rAlt").textContent  = fmt(row[COL.ALT]);
+  $("rTmin").textContent = fmt(row[COL.TMIN]);
+  $("rTmax").textContent = fmt(row[COL.TMAX]);
+  $("rZone").textContent = fmt(row[COL.ZONE]);
+  $("rW10").textContent  = fmt(row[COL.W10]);
+  $("rW25").textContent  = interpR25(row[COL.W10], row[COL.W100]);
+  $("rW50").textContent  = fmt(row[COL.W50]);
+  $("rW100").textContent = fmt(row[COL.W100]);
+  $("rS10").textContent  = fmt(row[COL.S10]);
+  $("rS25").textContent  = interpR25(row[COL.S10], row[COL.S100]);
+  $("rS50").textContent  = fmt(row[COL.S50]);
+  $("rS100").textContent = fmt(row[COL.S100]);
+}
+
+/* ==================== 事件 ==================== */
+/* 下拉与搜索互斥：以最后更新的控件为准（后者自动清空前者的过滤条件） */
+
+/* 清空搜索框与已应用关键字 */
+function clearSearch(){
+  $("searchBox").value = "";
+  appliedKw = "";
+}
+
+/* 选省份：清空搜索，城市下拉重置，结果清空，数据表只保留该省 */
+$("provSel").addEventListener("change", function(){
+  clearSearch();
+  fillCities(this.value);
+  $("condMsg").className = "msg";
+  resetResult();
+  renderTable();
+});
+/* 选城市：清空搜索，结果面板更新，数据表只保留该城市 */
+$("citySel").addEventListener("change", function(){
+  clearSearch();
+  var prov = $("provSel").value, city = this.value;
+  if (!prov || !city){ resetResult(); renderTable(); return; }
+  for (var i = 0; i < DATA.length; i++){
+    if (DATA[i][COL.PROV] === prov && DATA[i][COL.CITY] === city){
+      showRow(DATA[i]);
+      renderTable();
+      markTableRow(i);
+      return;
+    }
+  }
+});
+/* 搜索：以关键字为准（最后更新），清空下拉选择，数据表按关键字全量过滤；
+ * 唯一命中时 ③ 查询结果自动显示该城市 */
+$("btnSearch").addEventListener("click", function(){
+  appliedKw = $("searchBox").value.trim();
+  $("provSel").value = "";
+  fillCities("");
+  var matched = renderTable();
+  if (matched.length === 1){
+    showRow(DATA[matched[0]]);
+    markTableRow(matched[0]);
+    /* 同步级联下拉，明示命中城市 */
+    $("provSel").value = DATA[matched[0]][COL.PROV];
+    fillCities($("provSel").value);
+    $("citySel").value = DATA[matched[0]][COL.CITY];
+    setCondMsg("匹配 1 条，查询结果已更新", "ok");
+  } else if (matched.length === 0){
+    resetResult();
+    setCondMsg("未找到匹配数据", "warn");
+  } else {
+    resetResult();
+    setCondMsg("匹配 " + matched.length + " 条，点击表格行可查看单城详情", "ok");
+  }
+});
+$("searchBox").addEventListener("keydown", function(e){
+  if (e.key === "Enter") $("btnSearch").click();
+});
+/* 清除筛选：全部恢复 */
+$("btnReset").addEventListener("click", function(){
+  $("searchBox").value = "";
+  appliedKw = "";
+  $("provSel").value = "";
+  fillCities("");
+  resetResult();
+  renderTable();
+});
+
+/* 复制查询结果 */
+$("btnCopy").addEventListener("click", function(){
+  if (!CURRENT){ flashMsg("请先选择城市", "warn"); return; }
+  var r = CURRENT;
+  var line = r[COL.PROV] + " " + r[COL.CITY] +
+    "｜海拔 " + fmt(r[COL.ALT]) + " m" +
+    "｜风压 R10=" + fmt(r[COL.W10]) + " R25=" + $("rW25").textContent +
+    " R50=" + fmt(r[COL.W50]) + " R100=" + fmt(r[COL.W100]) + " kN/m²" +
+    "｜雪压 R10=" + fmt(r[COL.S10]) + " R25=" + $("rS25").textContent +
+    " R50=" + fmt(r[COL.S50]) + " R100=" + fmt(r[COL.S100]) + " kN/m²" +
+    "｜基本气温 " + fmt(r[COL.TMIN]) + "~" + fmt(r[COL.TMAX]) + " ℃" +
+    "｜雪荷载分区 " + fmt(r[COL.ZONE]);
+  var done = function(){ flashMsg("✓ 已复制到剪贴板", "ok"); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(line).then(done, function(){ fallbackCopy(line, done); });
+  } else { fallbackCopy(line, done); }
+});
+function fallbackCopy(text, done){
+  var ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+var msgTimer = null;
+function flashMsg(txt, type){
+  var el = $("copyMsg");
+  el.className = "msg " + type + " show";
+  el.textContent = txt;
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(function(){ el.className = "msg"; }, 2500);
+}
+
+/* ==================== 全表渲染与过滤 ==================== */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function fmtT(v){ return (v === "-" || v === "" || v === undefined) ? "—" : v; }
+
+/* 过滤优先级：省份 → 城市 → 搜索关键字（仅点击"搜索"后生效）；
+ * 返回命中行的原始索引数组（供搜索后自动填充 ③ 查询结果） */
+function renderTable(){
+  var prov = $("provSel").value;
+  var city = $("citySel").value;
+  var kw = appliedKw.trim().toLowerCase();
+  var tb = $("tableBody");
+  var frag = "";
+  var shown = 0;
+  var matched = [];
+  DATA.forEach(function(r, i){
+    if (prov && r[COL.PROV] !== prov) return;
+    if (city && r[COL.CITY] !== city) return;
+    if (kw && (r[COL.PROV] + r[COL.CITY]).toLowerCase().indexOf(kw) < 0) return;
+    shown++;
+    matched.push(i);
+    frag += '<tr data-i="' + i + '">' +
+      "<td>" + esc(r[COL.PROV]) + "</td>" +
+      "<td>" + esc(r[COL.CITY]) + "</td>" +
+      "<td>" + fmtT(r[COL.ALT]) + "</td>" +
+      "<td>" + fmtT(r[COL.W10]) + "</td>" +
+      "<td>" + fmtT(r[COL.W50]) + "</td>" +
+      "<td>" + fmtT(r[COL.W100]) + "</td>" +
+      "<td>" + fmtT(r[COL.S10]) + "</td>" +
+      "<td>" + fmtT(r[COL.S50]) + "</td>" +
+      "<td>" + fmtT(r[COL.S100]) + "</td>" +
+      "<td>" + fmtT(r[COL.TMIN]) + "</td>" +
+      "<td>" + fmtT(r[COL.TMAX]) + "</td>" +
+      "<td>" + fmtT(r[COL.ZONE]) + "</td></tr>";
+  });
+  tb.innerHTML = frag;
+  $("tableCount").textContent = "共 " + shown + " / " + DATA.length + " 条";
+  return matched;
+}
+
+/* ① 查询条件面板的提示条 */
+function setCondMsg(txt, type){
+  var el = $("condMsg");
+  el.className = "msg " + type + " show";
+  el.textContent = txt;
+}
+
+/* 点击表格行 → 选中查询 */
+$("tableBody").addEventListener("click", function(e){
+  var tr = e.target.closest("tr");
+  if (!tr || tr.dataset.i === undefined) return;
+  var i = Number(tr.dataset.i);
+  showRow(DATA[i]);
+  /* 反向联动：同步级联下拉 */
+  $("provSel").value = DATA[i][COL.PROV];
+  fillCities(DATA[i][COL.PROV]);
+  $("citySel").value = DATA[i][COL.CITY];
+  markTableRow(i);
+});
+/* 高亮当前选中行 */
+function markTableRow(i){
+  var trs = $("tableBody").querySelectorAll("tr");
+  trs.forEach(function(tr){ tr.classList.toggle("row-hl", Number(tr.dataset.i) === i); });
+}
+
+/* ==================== 初始化 ==================== */
+fillProvs();
+renderTable();
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "切换到暗色主题" : "切换到浅色主题";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/雪压风压查询.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>

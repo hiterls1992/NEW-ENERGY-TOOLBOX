@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="QDNAOEzhwmFUaDBLbxtI3d" data-theme="dark" data-dm-ref="1"><head data-page-node-id="jCiiWtZ3tSUA6NpRZRbTbR">
+<meta charset="UTF-8" data-page-node-id="Tds1SrCfNTpWmFvymydJlw">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="qtsWi787G8G0HwFazp5xq0">
+<title>新能源项目环境效益计算表 · 新能源工具箱</title>
+<link id="themeCss" rel="stylesheet" href="css/dark/index.css" data-page-node-id="jE4SwpQGyow14qhebpO4kJ">
+<script>
+(function(){
+  /* 主题加载：跟随用户上次选择（默认暗色科技风） */
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "css/" + t + "/index.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+<style id="__dm_no_drag_style__">* { -webkit-user-drag: none !important; }</style><style id="__dm_bindable_badge_style__">[data-sp-bindable="database"]{outline:1px dashed #0088ff;outline-offset:2px;border-radius:4px;}[data-sp-bindable="database"] *{pointer-events:none !important;transition:none !important;animation:none !important;}[data-sp-bindable="database"]{transition:none !important;animation:none !important;}</style></head>
+<body data-page-node-id="EvL0ev6cg8kZLv8iPlZgOR" style="">
+<div class="app" data-page-node-id="bYYwsHRae5IRsRHDmGgQte">
+
+  <!-- ===== 顶栏 ===== -->
+  <div class="topbar" data-page-node-id="pTja30RewSXXX68xNNvtZN">
+    <div class="logo" data-page-node-id="S4pBYOeV7lcdOlxD4kriu0">
+      <div class="mark" data-page-node-id="h9TFu9kYIVFvhwO6XBLVKO">⚡</div>
+      <h1 data-page-node-id="2DGocTRjzbAXSiBUXGR7fz">新能源工具箱</h1>
+      <span class="ver" data-page-node-id="ZQULuTSdbBU1BWtPz26rKp">V1.0</span>
+    </div>
+    <div class="sp" data-page-node-id="XxHAGlG92Hm7CBvKEmxCDC"></div>
+    <div class="clock" id="clock" data-page-node-id="UDnPQXndNvToBE3T5bUSGb">2026-09-09 20:47:56</div>
+    <button id="themeBtn" type="button" title="切换到浅色工程风" data-page-node-id="FYsKwqx7SVvHQsEAxWyp2A">☀️</button>
+  </div>
+
+  <div class="main" data-page-node-id="TgImcnRw67b7q1jUN6ioTJ">
+    <!-- ===== 侧边导航 ===== -->
+    <nav class="sidebar" id="sidebar" data-page-node-id="8nvxTkNXZK1fBW3s2Ro6Z2">
+      <div class="nav-group-title" data-page-node-id="H8YPgBoixwFHRGabff41lu">导航</div>
+      <button class="nav-item" data-page="home" data-page-node-id="1I13Hy3MslwjuzlM7CX4Mq">
+        <span class="ico" data-page-node-id="aCINtDxg7mMLOcNgrOagTK">🏠</span>
+        <span data-page-node-id="8iEV1pNG7X3ZzDzoUW5Gjj"><span class="nv-name" data-page-node-id="EHc2hAAmqAtZg6OWgM98oj">首页</span><span class="nv-desc" data-page-node-id="08rTjVZH84xXnL4KlN6eQx">工具总览</span></span>
+      </button>
+      <div class="nav-group-title" data-page-node-id="vmMmzsCYnfQ7EB1sYDzetJ">测量 · 坐标</div>
+      <button class="nav-item" data-page="coord-transform" data-page-node-id="kiBfe7PkwzHx6Zyb9nyyIZ">
+        <span class="ico" data-page-node-id="QXBexrCzNpMkFhoqEG9Oe9">🌐</span>
+        <span data-page-node-id="VPwPNNLqRoCiXGnoKqoUCi"><span class="nv-name" data-page-node-id="6ZTvz6GU8wsuxsHEaySNhE">2000坐标与经纬度互转</span><span class="nv-desc" data-page-node-id="qSyhEjcPlmuG6yp4fZCluf">CGCS2000 ↔ 经纬度</span></span>
+      </button>
+      <button class="nav-item" data-page="cad-plot" data-page-node-id="OywXds7WACDy1J2nYDGx74">
+        <span class="ico" data-page-node-id="lKxBUFYgiArAmKShGPeZfQ">📐</span>
+        <span data-page-node-id="P3retJcrTwidTBWPrTVBeW"><span class="nv-name" data-page-node-id="9yhRmkSU4jTEG9hbgLdzdx">CAD展点</span><span class="nv-desc" data-page-node-id="ArExyB5aBZar7LEjriW7z2">坐标批量展点出脚本</span></span>
+      </button>
+      <button class="nav-item" data-page="xy-ab" data-page-node-id="rY1d8GEkoGwyPlCA5Ss0yd">
+        <span class="ico" data-page-node-id="OICb3IDGXCBaOs3UAImAjK">🔄</span>
+        <span data-page-node-id="80eKKtG90WhGRwqGDPUv5x"><span class="nv-name" data-page-node-id="RAtmMCYYm2VErzgWeeUKke">XY与AB坐标转换</span><span class="nv-desc" data-page-node-id="wWPaUtvfTi7J9xBpcuuW6F">施工坐标系四参数变换</span></span>
+      </button>
+      <button class="nav-item" data-page="octagon" data-page-node-id="5pA3I5n0GTYlBINnWE6RZw">
+        <span class="ico" data-page-node-id="Nroc3WucCo6aBkOTZVB4je">⬡</span>
+        <span data-page-node-id="Jmm2CXMeiSEoHndJxbGOms"><span class="nv-name" data-page-node-id="0twMnXOhEYg393tA2ZMI8Y">风机基础正八边形征地坐标生成器</span><span class="nv-desc" data-page-node-id="92iM3sPVq2EKQAxzAKFC6v">征地坐标 · CSV · CAD 脚本</span></span>
+      </button>
+      <div class="nav-group-title" data-page-node-id="cFNNbG9VXEfn86YqA2dYBL">电气 · 环保</div>
+      <button class="nav-item" data-page="conductor" data-page-node-id="HE7xXlHQyYIenDS1v3Ys0j">
+        <span class="ico" data-page-node-id="ecoa7oYSIkqGP4gE02B2fZ">🔌</span>
+        <span data-page-node-id="Ia9n9Tl8QCsFoNOb15W7q8"><span class="nv-name" data-page-node-id="ARZdMcKnBIsMfSr9mJlfX2">导线输送容量计算</span><span class="nv-desc" data-page-node-id="Z11ONrnzh6zGnGNUYwT0ip">载流量 · 经济电流密度</span></span>
+      </button>
+      <button class="nav-item active" data-page="eco-benefit" data-page-node-id="33toNuZDuUQhO6iifeIclL">
+        <span class="ico" data-page-node-id="dIJGXuBOnA4AdhkfycHltE">🌱</span>
+        <span data-page-node-id="CJWYKaZtCuJKLHPvvmJOS0"><span class="nv-name two-line" data-page-node-id="FEPnXFQdQ6THEaajfEBdUz">新能源项目环境<br>效益计算表</span><span class="nv-desc" data-page-node-id="3oCdJ56ad1bBXGUNSEgBiN">减排节能 · 成果话术</span></span>
+      </button>
+      <div class="nav-group-title" data-page-node-id="USwnAqJdWsfkiadYUcIf9f">实用工具</div>
+      <button class="nav-item" data-page="batch-mkdir" data-page-node-id="Iix30Sxrln80XU08hz42Jl">
+        <span class="ico" data-page-node-id="vFcoYhkUrq2RnSiqxzPcIM">📁</span>
+        <span data-page-node-id="pJDB5xBSsDDFS9ES9J3paM"><span class="nv-name" data-page-node-id="yjLMzmVN8xxWumgGVE0k5B">批量新建文件夹</span><span class="nv-desc" data-page-node-id="mEGhpW7mBtr8CRHDO9HRTJ">粘贴名称 · 生成 BAT 脚本</span></span>
+      </button>
+      <button class="nav-item" data-page="snow-wind" data-page-node-id="4KzH9RgbpMxtBoOKhudNJc">
+        <span class="ico" data-page-node-id="Akm1MrDvf6NbCV1iE2ON8w">🌬️</span>
+        <span data-page-node-id="t5caRIrrB966S9WtWQMcH4"><span class="nv-name" data-page-node-id="CI3UjpgUEobHImLyW0eebM">雪压风压查询</span><span class="nv-desc" data-page-node-id="h04EBJ7tTU0A0BPSETHqeR">GB50009-2012 表E.5 · 667 地区</span></span>
+      </button>
+      <div class="foot" data-page-node-id="VwCh6mYjNRBjeGFTqAopwx">
+        新能源工具箱 V1.0 · 作者 hiterls1992<br data-page-node-id="48nbSKcFuwwStGKolqGjvX">
+        本地运行，所有计算均在浏览器内完成，不上传任何数据
+      </div>
+    </nav>
+
+    <!-- ===== 内容区 ===== -->
+    <div class="content" data-page-node-id="qiLwTlbZ08Iyrm7vT63SFg">
+      <!-- 首页视图 -->
+      <div id="homeView" data-page-node-id="n3kRvksyKEQvZtM2FrGNJ7" style="display: none;">
+        <div class="hero" data-page-node-id="qKxzOB29dDGLZ0tjIHvgky">
+          <div class="kicker" data-page-node-id="oVh4ytjdfRWJCygEE8QX5I">NEW ENERGY TOOLBOX</div>
+          <h2 data-page-node-id="FhfjWbhKjt5D86vUR1s9KS">新能源<span class="hl" data-page-node-id="gHIDBNlS2Ow64HmELmbRRa">工程小工具</span>合集</h2>
+          <p data-page-node-id="FbkfeiiMijkXJdVdilJr2i">面向风电、输电线路设计的测量坐标、导线电气、环保效益系列计算工具。全部为网页应用，本地离线运行，支持暗色科技风 / 浅色工程风主题切换，选择左侧工具或点击下方卡片开始使用。</p>
+          <div class="meta" data-page-node-id="ZtSk8F28SoTZ59TyakFn8L">
+            <span data-page-node-id="RcbnNOiXZhYwRPPiBPefCw">共 <b data-page-node-id="TJLV6N1vlah5oSohBI6IRN">8</b> 个工具</span>
+            <span data-page-node-id="H9l3QjnAh8SWL9G6vPHURk">坐标系 <b data-page-node-id="KlFDTcmY3FHLb6VatV7Uic">CGCS2000</b></span>
+            <span data-page-node-id="6MkmR1L4QuGUrkuWJCqLl3">双主题 <b data-page-node-id="LJBoEHTNi97s1Aju9QnOPj">暗色 / 浅色</b></span>
+            <span data-page-node-id="ujqixfPG9XJ8ekpFdeKXkS">离线可用 · <b data-page-node-id="MGovDln1vLnVEiLEBoPFZ4">数据不出本机</b></span>
+          </div>
+        </div>
+        <div class="tool-grid" id="toolGrid" data-page-node-id="3NAvzjQSUHw59SDl3jLxua"><button class="tool-card"><div class="tc-head"><div class="tc-ico">🌐</div><div class="tc-name">2000坐标与经纬度互转</div><span class="tc-tag">测量</span></div><div class="tc-desc">CGCS2000 平面坐标 ↔ 经纬度双向转换，自动识别带号与坐标方向，支持单点与批量转换、CSV 导出。</div><div class="tc-open">打开工具 →</div></button><button class="tool-card"><div class="tc-head"><div class="tc-ico">📐</div><div class="tc-name">CAD展点</div><span class="tc-tag">测量</span></div><div class="tc-desc">测量坐标自动颠倒换算生成 CAD 展点命令，支持 Excel/Word 表格直接粘贴、批量出 .scr 脚本。</div><div class="tc-open">打开工具 →</div></button><button class="tool-card"><div class="tc-head"><div class="tc-ico">⬡</div><div class="tc-name">风机基础正八边形征地坐标生成器</div><span class="tc-tag">风机</span></div><div class="tc-desc">由机位中心坐标生成正八边形基础 8 角点坐标，输出 CSV 与 CAD 绘图脚本，可选经纬度。</div><div class="tc-open">打开工具 →</div></button><button class="tool-card"><div class="tc-head"><div class="tc-ico">🔄</div><div class="tc-name">XY与AB坐标转换</div><span class="tc-tag">测量</span></div><div class="tc-desc">由两组已知对照点解算平面相似变换参数（平移+旋转+比例），实现 CGCS2000 坐标与施工局部坐标 AB 双向互转，支持批量与 CSV 导出。</div><div class="tc-open">打开工具 →</div></button><button class="tool-card"><div class="tc-head"><div class="tc-ico">🔌</div><div class="tc-name">导线输送容量计算</div><span class="tc-tag">电气</span></div><div class="tc-desc">钢芯铝绞线允许载流量、输送容量、经济电流密度、电压降落与线损计算，依据 DL/T 5582-2020。</div><div class="tc-open">打开工具 →</div></button><button class="tool-card"><div class="tc-head"><div class="tc-ico">🌱</div><div class="tc-name">新能源项目环境效益计算表</div><span class="tc-tag">环保</span></div><div class="tc-desc">年上网电量一键测算节约标准煤、碳粉尘、SO₂、NOₓ、CO₂ 减排量，自动生成成果描述话术。</div><div class="tc-open">打开工具 →</div></button><button class="tool-card"><div class="tc-head"><div class="tc-ico">📁</div><div class="tc-name">批量新建文件夹</div><span class="tc-tag">实用</span></div><div class="tc-desc">批量粘贴文件夹名称，自动校验 Windows 非法字符/重复项并支持子目录，一键生成 .bat 批处理，下载后放到父目录运行即可批量建文件夹。</div><div class="tc-open">打开工具 →</div></button><button class="tool-card"><div class="tc-head"><div class="tc-ico">🌬️</div><div class="tc-name">雪压风压查询</div><span class="tc-tag">查询</span></div><div class="tc-desc">GB 50009-2012 表 E.5 全国 667 地区雪压、风压（R=10/50/100）、基本气温与雪荷载分区查询，支持省份级联、关键字过滤与结果复制。</div><div class="tc-open">打开工具 →</div></button></div>
+      </div>
+      <!-- 工具 iframe -->
+      <iframe class="tool-frame" id="toolFrame" title="工具页面" style="display: block;" data-page-node-id="ZNE9JefybbBEk7APmXChjG" src="tools/新能源项目环境效益计算表.html"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" data-page-node-id="wRwiyFSrilsEifmpRwo8aN"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ==================== 工具注册表 ==================== */
+/* name 与 tools/ 目录下文件名保持一致；file 为相对路径 */
+var TOOLS = {
+  "coord-transform": {
+    name:"2000坐标与经纬度互转", ico:"🌐", tag:"测量",
+    desc:"CGCS2000 平面坐标 ↔ 经纬度双向转换，自动识别带号与坐标方向，支持单点与批量转换、CSV 导出。",
+    file:"tools/2000坐标与经纬度互转.html"
+  },
+  "cad-plot": {
+    name:"CAD展点", ico:"📐", tag:"测量",
+    desc:"测量坐标自动颠倒换算生成 CAD 展点命令，支持 Excel/Word 表格直接粘贴、批量出 .scr 脚本。",
+    file:"tools/CAD展点.html"
+  },
+  "octagon": {
+    name:"风机基础正八边形征地坐标生成器", ico:"⬡", tag:"风机",
+    desc:"由机位中心坐标生成正八边形基础 8 角点坐标，输出 CSV 与 CAD 绘图脚本，可选经纬度。",
+    file:"tools/风机基础正八边形征地坐标生成器.html"
+  },
+  "xy-ab": {
+    name:"XY与AB坐标转换", ico:"🔄", tag:"测量",
+    desc:"由两组已知对照点解算平面相似变换参数（平移+旋转+比例），实现 CGCS2000 坐标与施工局部坐标 AB 双向互转，支持批量与 CSV 导出。",
+    file:"tools/XY与AB坐标转换.html"
+  },
+  "conductor": {
+    name:"导线输送容量计算", ico:"🔌", tag:"电气",
+    desc:"钢芯铝绞线允许载流量、输送容量、经济电流密度、电压降落与线损计算，依据 DL/T 5582-2020。",
+    file:"tools/导线输送容量计算.html"
+  },
+  "eco-benefit": {
+    name:"新能源项目环境效益计算表", ico:"🌱", tag:"环保",
+    desc:"年上网电量一键测算节约标准煤、碳粉尘、SO₂、NOₓ、CO₂ 减排量，自动生成成果描述话术。",
+    file:"tools/新能源项目环境效益计算表.html"
+  },
+  "batch-mkdir": {
+    name:"批量新建文件夹", ico:"📁", tag:"实用",
+    desc:"批量粘贴文件夹名称，自动校验 Windows 非法字符/重复项并支持子目录，一键生成 .bat 批处理，下载后放到父目录运行即可批量建文件夹。",
+    file:"tools/批量新建文件夹.html"
+  },
+  "snow-wind": {
+    name:"雪压风压查询", ico:"🌬️", tag:"查询",
+    desc:"GB 50009-2012 表 E.5 全国 667 地区雪压、风压（R=10/50/100）、基本气温与雪荷载分区查询，支持省份级联、关键字过滤与结果复制。",
+    file:"tools/雪压风压查询.html"
+  }
+};
+
+var $ = function(id){ return document.getElementById(id); };
+var homeView = $("homeView"), toolFrame = $("toolFrame");
+var current = null;   // 当前显示的工具 key，null = 首页
+
+/* ==================== 主题切换 ==================== */
+function currentTheme(){
+  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+}
+function syncThemeBtn(){
+  var btn = $("themeBtn");
+  if (currentTheme() === "light"){
+    btn.textContent = "\ud83c\udf19";            // 月亮：点击切回暗色
+    btn.title = "切换到暗色科技风";
+  } else {
+    btn.textContent = "\u2600\ufe0f";            // 太阳：点击切到浅色
+    btn.title = "切换到浅色工程风";
+  }
+}
+$("themeBtn").addEventListener("click", function(){
+  var t = currentTheme() === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+  $("themeCss").href = "css/" + t + "/index.css";
+  syncThemeBtn();
+  /* 工具页在 iframe 内加载时自行读取同一主题设置，这里重载使其生效 */
+  if (current !== null) { toolFrame.src = toolFrame.src; }
+});
+syncThemeBtn();
+
+/* ==================== 首页卡片渲染 ==================== */
+function buildCards(){
+  var grid = $("toolGrid");
+  grid.innerHTML = "";
+  Object.keys(TOOLS).forEach(function(key){
+    var t = TOOLS[key];
+    var card = document.createElement("button");
+    card.className = "tool-card";
+    card.innerHTML =
+      '<div class="tc-head">' +
+        '<div class="tc-ico">' + t.ico + '</div>' +
+        '<div class="tc-name">' + t.name + '</div>' +
+        '<span class="tc-tag">' + t.tag + '</span>' +
+      '</div>' +
+      '<div class="tc-desc">' + t.desc + '</div>' +
+      '<div class="tc-open">打开工具 →</div>';
+    card.addEventListener("click", function(){ showPage(key); });
+    grid.appendChild(card);
+  });
+}
+
+/* ==================== 页面切换 ==================== */
+function showPage(key){
+  var navItems = document.querySelectorAll(".nav-item");
+  navItems.forEach(function(btn){
+    btn.classList.toggle("active", btn.dataset.page === key);
+  });
+  if(key === "home" || !TOOLS[key]){
+    current = null;
+    toolFrame.style.display = "none";
+    toolFrame.src = "about:blank";
+    homeView.style.display = "block";
+    if(location.hash !== "" && location.hash !== "#home"){
+      history.replaceState(null, "", "#home");
+    }
+    return;
+  }
+  var t = TOOLS[key];
+  if(current !== key){
+    toolFrame.src = t.file;   // 仅在切换到不同工具时重载，保留各工具运行状态
+  }
+  current = key;
+  homeView.style.display = "none";
+  toolFrame.style.display = "block";
+  if(location.hash !== "#" + key){
+    history.replaceState(null, "", "#" + key);
+  }
+  document.title = t.name + " · 新能源工具箱";
+}
+
+/* 侧栏导航绑定 */
+document.querySelectorAll(".nav-item").forEach(function(btn){
+  btn.addEventListener("click", function(){ showPage(btn.dataset.page); });
+});
+
+/* hash 记忆：刷新 / 直达某个工具 */
+function initFromHash(){
+  var key = location.hash.replace("#", "");
+  showPage(TOOLS[key] ? key : "home");
+}
+window.addEventListener("hashchange", function(){
+  var key = location.hash.replace("#", "");
+  showPage(TOOLS[key] ? key : "home");
+});
+
+/* ==================== 顶栏时钟 ==================== */
+function tick(){
+  var d = new Date();
+  var p = function(n){ return String(n).padStart(2, "0"); };
+  $("clock").textContent =
+    d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) +
+    " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+}
+tick();
+setInterval(tick, 1000);
+
+/* ==================== 初始化 ==================== */
+buildCards();
+initFromHash();
+})();
+</script>
+
+
+</body></html>

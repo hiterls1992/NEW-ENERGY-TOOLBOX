@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>风机基础正八边形征地坐标生成器</title>
+<link id="themeCss" rel="stylesheet" href="../css/dark/风机基础正八边形征地坐标生成器.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem("nbx-theme") === "light" ? "light" : "dark";
+    document.getElementById("themeCss").href = "../css/" + t + "/风机基础正八边形征地坐标生成器.css";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>风机基础正八边形征地坐标生成器</h1>
+    <div class="sub">基于风机中心坐标（CGCS2000 国家大地坐标系, X=北向纵坐标, Y=东向横坐标）自动生成正八边形基础 8 个角点坐标，支持 CSV 导出与 CAD 绘图脚本，可选输出经纬度（CGCS2000 高斯-克吕格反算，十进制）</div>
+  </header>
+
+  <div class="layout">
+    <!-- 左侧：参数输入 -->
+    <aside class="panel">
+      <h2>参数与输入</h2>
+
+      <div class="row2">
+        <label class="field">
+          <span class="lb">内接圆直径 D (米)</span>
+          <input type="number" id="diameter" value="25" min="1" step="0.1">
+          <span class="hp">正八边形对边距离（内切圆直径）</span>
+        </label>
+        <label class="field">
+          <span class="lb">首角点起始角度 α₀ (°)</span>
+          <input type="number" id="startAz" value="22.5" step="0.1">
+          <span class="hp">P1 方位角，自正北顺时针，默认 22.5°（八边形平边朝正北）</span>
+        </label>
+      </div>
+      <label class="field">
+        <span class="lb">坐标小数位数</span>
+        <select id="decimals">
+          <option value="2">2 位（厘米）</option>
+          <option value="3" selected>3 位（毫米，推荐）</option>
+          <option value="4">4 位</option>
+          <option value="6">6 位</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="lb">输出内容</span>
+        <div class="checks">
+          <label><input type="checkbox" id="outXY" checked> 输出 XY 坐标</label>
+          <label><input type="checkbox" id="outLL" checked> 输出经纬度（十进制）</label>
+          <label><input type="checkbox" id="outCenter" checked> 输出中心坐标</label>
+        </div>
+      </label>
+
+      <label class="field">
+        <span class="lb">中央子午线（XY→经纬度反算）</span>
+        <div class="radios">
+          <label><input type="radio" name="meridian" value="auto" checked> 自动识别（Y≥1000万带带号）</label>
+          <label><input type="radio" name="meridian" value="manual"> 手动指定
+            <input type="number" id="merL0" placeholder="如 114" disabled><span style="color:var(--muted)">°E</span>
+          </label>
+        </div>
+        <span class="hp">按 3° 带识别：带号 × 3 = 中央子午线，如 38 带 → 114°E；不带带号的 Y 需手动指定</span>
+      </label>
+
+      <label class="field">
+        <span class="lb">输入格式</span>
+        <select id="format">
+          <option value="idXY" selected>编号,X,Y（推荐）</option>
+          <option value="XYid">X,Y,编号</option>
+          <option value="XY">X,Y（自动编号）</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="lb">风机中心坐标（每行一个机位）</span>
+        <textarea id="input" spellcheck="false" placeholder="支持 逗号 / 空格 / 制表符 分隔，例如：&#10;F1&#9;4480735&#9;38397196&#10;F2&#9;4477837&#9;38394755"></textarea>
+        <span class="hp">建议直接粘贴 Excel 中「编号、X、Y」三列</span>
+      </label>
+
+      <div class="checks">
+        <label><input type="checkbox" id="swapXY"> 输入是 Y,X 顺序（交换）</label>
+        <label><input type="checkbox" id="skipHeader"> 跳过首行（表头）</label>
+      </div>
+
+      <div class="btnrow">
+        <button class="btn primary" id="btnGen">计算生成</button>
+        <button class="btn ghost small" id="btnExample">填入示例</button>
+        <button class="btn ghost small" id="btnClear">清空</button>
+      </div>
+    </aside>
+
+    <!-- 右侧：结果输出 -->
+    <main class="panel">
+      <h2>生成结果</h2>
+
+      <div class="tabs">
+        <div class="tab active" id="tabCsv">坐标数据（CSV 预览）</div>
+        <div class="tab" id="tabCad">CAD 绘图命令</div>
+      </div>
+
+      <div class="stats" id="stats">尚未生成数据</div>
+      <div class="errbox" id="errBox"></div>
+
+      <div class="toolbar" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">
+        <button class="btn primary small" id="btnDlCsv">下载 CSV</button>
+        <button class="btn ghost small" id="btnCopyCsv">复制 CSV</button>
+        <button class="btn ghost small" id="btnDlScr">下载 CAD 脚本 (.scr)</button>
+        <button class="btn ghost small" id="btnCopyCad">复制 CAD 命令</button>
+        <span class="sp" style="flex:1"></span>
+        <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="headerCb" checked style="accent-color:var(--primary)"> CSV 含表头
+        </label>
+      </div>
+
+      <div id="panelCsv">
+        <div id="tableWrap"></div>
+      </div>
+      <div id="panelCad" style="display:none">
+        <div class="toolbar" style="margin-bottom:8px;gap:16px">
+          <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none">
+            <input type="checkbox" id="scrComments" style="accent-color:#22d3ee"> 含注释行（仅英文，部分 CAD 不支持，默认关）
+          </label>
+          <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none">
+            <input type="checkbox" id="scrPdmode" style="accent-color:#22d3ee"> 含点样式设置 PDMODE/PDSIZE
+          </label>
+          <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none">
+            <input type="checkbox" id="scrText" checked style="accent-color:#22d3ee"> 绘制风机编号（-TEXT）
+          </label>
+          <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;user-select:none">
+            字高
+            <input type="number" id="scrTextH" value="5" min="0.5" step="0.5" style="width:64px;padding:3px 6px;font-size:12px;border:1px solid var(--line2);border-radius:6px;background:var(--bg2);color:var(--text)">
+            m
+          </label>
+        </div>
+        <div class="toolbar" style="margin-bottom:8px;gap:16px">
+          <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none">
+            <input type="checkbox" id="scrLayer" checked style="accent-color:#22d3ee"> 新建图层并分图层（-LAYER）
+          </label>
+          <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;user-select:none">
+            编号图层
+            <input type="text" id="scrLNameNum" value="风机编号" style="width:96px;padding:3px 6px;font-size:12px;border:1px solid var(--line2);border-radius:6px;background:var(--bg2);color:var(--text)">
+          </label>
+          <label style="font-size:12.5px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;user-select:none">
+            征地图层
+            <input type="text" id="scrLNameMap" value="风机基础征地图" style="width:130px;padding:3px 6px;font-size:12px;border:1px solid var(--line2);border-radius:6px;background:var(--bg2);color:var(--text)">
+          </label>
+        </div>
+        <textarea id="cadOut" readonly spellcheck="false" wrap="off"></textarea>
+      </div>
+
+      <div class="note">
+        <b>输出规则：</b>勾选「输出中心坐标」时每个机位 9 行 —— 第 1 行为中心点坐标，其后 8 行为八边形顶点坐标（自 P1 起<b>顺时针</b>编号 P1→P8）；取消勾选后每机位仅 8 行（只含顶点），CAD 脚本中也不再绘制中心点（POINT）。<br>
+        <b>计算公式：</b>外接圆半径 R<sub>c</sub> = D ÷ (2·cos22.5°)；顶点 P<sub>i</sub>：X = X<sub>c</sub> + R<sub>c</sub>·cos(α<sub>i</sub>)，Y = Y<sub>c</sub> + R<sub>c</sub>·sin(α<sub>i</sub>)，其中 α<sub>i</sub> = α₀ + (i-1)×45°（自正北顺时针，α₀ 为「首角点起始角度」，默认 22.5°，即八边形平边朝正北）。<br>
+        <b>CAD 脚本用法：</b>脚本默认<b>不含注释和中文</b>，只输出纯命令+坐标，兼容 AutoCAD / 中望CAD / 浩辰CAD 等。<b>注意：CAD 脚本中坐标已按 CAD 平面坐标系交换为 (Y,X)</b>——CAD X=东向(即 2000 的 Y)，CAD Y=北向(即 2000 的 X)；CSV 则保持 2000 标准 (X=北,Y=东) 顺序不变。命令行输入 <code>SCRIPT</code> 选择 <code>.scr</code> 文件批量执行；不支持 SCRIPT 时也可把命令逐行粘贴到命令行（每行回车即可），即可绘制中心点（POINT）、八边形（PLINE+C 闭合）与机位编号（-TEXT 命令行版，插入点=中心点，字高默认 5，旋转角 0°；不用 TEXT 是因为其会弹出在位编辑器导致脚本中断）。勾选「新建图层并分图层」时先执行 -LAYER 新建「风机编号」「风机基础征地图」两个图层，八边形/中心点画在征地图层，编号画在编号图层。<b>注意：图层名为中文，若下载 .scr 后图层名乱码，请改用复制粘贴方式，或把图层名改为拼音/英文。</b><br>
+        <b>经纬度反算：</b>采用 CGCS2000 椭球（a=6378137m，f=1/298.257222101）高斯-克吕格反算，与「2000坐标转经纬度」工具同算法；Y≥1000 万时自动按前两位带号识别 3° 带中央子午线（38 带 → 114°E），不带带号的 Y 需手动指定中央子午线；经纬度按十进制输出，保留 7 位小数（≈1cm）。
+      </div>
+    </main>
+  </div>
+
+  <footer>CGCS2000 坐标系 · 单位：米 · 八边形顶点自 P1 起顺时针排列（α₀ 可调，默认 22.5°）</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var D2R=Math.PI/180;
+var state={rows:null,dec:3,D:20,turbines:null};
+
+/* ---------- 核心计算：正八边形（内接圆直径 D，首角点起始方位角 startAz） ---------- */
+function computeOctagon(cx,cy,D,startAz){
+  var Rc=(D/2)/Math.cos(22.5*D2R);   // 外接圆半径
+  var pts=[];
+  for(var i=0;i<8;i++){
+    var az=startAz+i*45;             // 自正北顺时针的方位角
+    pts.push({x:cx+Rc*Math.cos(az*D2R), y:cy+Rc*Math.sin(az*D2R), az:Math.round(az*1e4)/1e4});
+  }
+  return {Rc:Rc, pts:pts};
+}
+
+/* ==================== CGCS2000 高斯-克吕格反算（XY→经纬度，与「2000坐标转经纬度」工具同算法） ==================== */
+var ELL_A=6378137.0, ELL_F=1/298.257222101;        // CGCS2000 椭球
+var ELL_E2=ELL_F*(2-ELL_F), ELL_EP2=ELL_E2/(1-ELL_E2);
+
+function meridianArc(B){
+  var e2=ELL_E2,e4=e2*e2,e6=e4*e2;
+  var m0=ELL_A*(1-e2/4-3*e4/64-5*e6/256);
+  var m2=ELL_A*(3*e2/8+3*e4/32+45*e6/1024);
+  var m4=ELL_A*(15*e4/256+45*e6/1024);
+  var m6=ELL_A*(35*e6/3072);
+  return m0*B-m2*Math.sin(2*B)+m4*Math.sin(4*B)-m6*Math.sin(6*B);
+}
+function footPointLat(x){
+  var e2=ELL_E2;
+  var m0=ELL_A*(1-e2/4-3*e2*e2/64-5*e2*e2*e2/256);
+  var Bf=x/m0;
+  for(var i=0;i<30;i++) Bf=(x-(meridianArc(Bf)-m0*Bf))/m0;
+  return Bf;
+}
+function gaussInverse(x,y,L0deg){
+  var L0=L0deg*Math.PI/180;
+  var Bf=footPointLat(x);
+  var sB=Math.sin(Bf),cB=Math.cos(Bf);
+  var W2=1-ELL_E2*sB*sB;
+  var Nf=ELL_A/Math.sqrt(W2);
+  var Mf=ELL_A*(1-ELL_E2)/(W2*Math.sqrt(W2));   // 子午圈曲率半径
+  var tf=Math.tan(Bf), nf2=ELL_EP2*cB*cB;
+  var y2=y*y,y3=y2*y,y4=y2*y2,y5=y4*y,y6=y4*y2;
+  // 注意：纬度 B 系列分母用 Mf·Nf、Mf·Nf³、Mf·Nf⁵（原参考工具误用 Nf²/Nf⁴/Nf⁶，
+  // 会使纬度产生约 2.7m 偏差；本修正版已用 PROJ 权威库验证一致）
+  var B=Bf-tf*y2/(2*Mf*Nf)
+    +tf*(5+3*tf*tf+nf2-9*nf2*tf*tf)*y4/(24*Mf*Nf*Nf*Nf)
+    -tf*(61+90*tf*tf+45*tf*tf*tf*tf)*y6/(720*Mf*Math.pow(Nf,5));
+  var L=L0+y/(Nf*cB)
+    -(1+2*tf*tf+nf2)*y3/(6*Nf*Nf*Nf*cB)
+    +(5+28*tf*tf+24*tf*tf*tf*tf+6*nf2+8*nf2*tf*tf)*y5/(120*Math.pow(Nf,5)*cB);
+  return {lat:B*180/Math.PI, lon:L*180/Math.PI};
+}
+function extractZone(E){
+  var sign=E<0?-1:1;
+  var a=Math.abs(E);
+  if(a>=10000000){
+    var zone=Math.floor(a/1000000);
+    return {hasZone:true,zone:zone,L0:zone*3,y:sign*(a-zone*1000000-500000)};
+  }
+  return {hasZone:false,zone:0,L0:null,y:sign*(a-500000)};
+}
+function outCols(){ return {xy:$('outXY').checked, ll:$('outLL').checked}; }
+
+/* ---------- 输入解析 ---------- */
+function parseInput(text,format,swapXY,skipHeader){
+  var lines=text.split(/\r?\n/);
+  var out=[],errors=[];
+  var firstData=false,auto=0;
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i].trim();
+    if(!line) continue;
+    if(!firstData){ firstData=true; if(skipHeader) continue; }
+    var toks=line.split(/[\s,，;；\t]+/).filter(function(t){return t!=='';});
+    var id=null,x=NaN,y=NaN;
+    if(format==='idXY'){
+      if(toks.length<3){errors.push('第'+(i+1)+'行：应为「编号,X,Y」，当前 '+toks.length+' 个字段');continue;}
+      id=toks[0]; x=Number(toks[1]); y=Number(toks[2]);
+    }else if(format==='XYid'){
+      if(toks.length<3){errors.push('第'+(i+1)+'行：应为「X,Y,编号」，当前 '+toks.length+' 个字段');continue;}
+      x=Number(toks[0]); y=Number(toks[1]); id=toks[2];
+    }else{ // XY 自动编号
+      if(toks.length<2){errors.push('第'+(i+1)+'行：应为「X,Y」，当前 '+toks.length+' 个字段');continue;}
+      x=Number(toks[0]); y=Number(toks[1]); auto++; id=(toks.length>2)?toks[2]:String(auto);
+    }
+    if(isNaN(x)||isNaN(y)){errors.push('第'+(i+1)+'行：坐标不是有效数值');continue;}
+    if(swapXY){var t=x;x=y;y=t;}
+    out.push({id:String(id), x:x, y:y});
+  }
+  return {turbines:out, errors:errors};
+}
+
+/* ---------- 生成 ---------- */
+function generate(){
+  var D=parseFloat($('diameter').value);
+  var startAz=parseFloat($('startAz').value);
+  if(isNaN(startAz)) startAz=0;
+  var dec=parseInt($('decimals').value,10);
+  var format=$('format').value;
+  var swap=$('swapXY').checked;
+  var skip=$('skipHeader').checked;
+  var src=$('input').value;
+  if(!(D>0)){ toast('请填写正确的内接圆直径（米）'); return; }
+
+  var parsed=parseInput(src,format,swap,skip);
+  var errBox=$('errBox');
+  if(parsed.errors.length){
+    errBox.style.display='block';
+    errBox.textContent='输入解析错误（共 '+parsed.errors.length+' 处）：\n'+parsed.errors.join('\n');
+  }else{
+    errBox.style.display='none';
+  }
+
+  if(parsed.turbines.length===0){
+    $('stats').textContent='未解析到有效机位，请检查输入内容';
+    $('tableWrap').innerHTML='';
+    $('cadOut').value='';
+    state.rows=null;
+    return;
+  }
+
+  var colXY=outCols().xy, colLL=outCols().ll;
+  var colCenter=$('outCenter').checked;
+  if(!colXY && !colLL){ toast('请至少勾选一种输出内容'); return; }
+
+  // 中央子午线（仅输出经纬度时需要）
+  var merMode=document.querySelector('input[name="meridian"]:checked').value;
+  var merL0=null;
+  if(merMode==='manual'){
+    merL0=parseFloat($('merL0').value);
+    if(isNaN(merL0)){ toast('请填写中央子午线经度（°E）'); return; }
+  }
+
+  var parsed=parseInput(src,format,swap,skip);
+  var errBox=$('errBox');
+  if(parsed.errors.length){
+    errBox.style.display='block';
+    errBox.textContent='输入解析错误（共 '+parsed.errors.length+' 处）：\n'+parsed.errors.join('\n');
+  }else{
+    errBox.style.display='none';
+  }
+
+  if(parsed.turbines.length===0){
+    $('stats').textContent='未解析到有效机位，请检查输入内容';
+    $('tableWrap').innerHTML='';
+    $('cadOut').value='';
+    state.rows=null;
+    return;
+  }
+
+  // 经纬度反算前检查：自动识别模式下所有机位的 Y 必须带带号
+  if(colLL && merMode==='auto'){
+    var zoneErrors=[];
+    for(var zi=0;zi<parsed.turbines.length;zi++){
+      if(!extractZone(parsed.turbines[zi].y).hasZone){
+        zoneErrors.push('机位 '+parsed.turbines[zi].id+'（Y='+parsed.turbines[zi].y+'，不足 1000 万，不带带号）');
+      }
+    }
+    if(zoneErrors.length){
+      errBox.style.display='block';
+      errBox.textContent='无法自动识别中央子午线（共 '+zoneErrors.length+' 个机位）：\n'+zoneErrors.join('\n')+'\n请在左侧切换为「手动指定」并输入中央子午线经度';
+      $('tableWrap').innerHTML='';
+      $('cadOut').value='';
+      state.rows=null;
+      return;
+    }
+  }
+
+  // 每个机位确定 L0/带号（自动模式逐机位识别，支持跨带）
+  var l0List=[], zoneList=[];
+  for(var tj=0;tj<parsed.turbines.length;tj++){
+    var tt=parsed.turbines[tj];
+    if(colLL){
+      var zt=extractZone(tt.y);
+      tt.L0=merMode==='manual'?merL0:zt.L0;
+      tt.zone=merMode==='manual'?Math.round(merL0/3):zt.zone;
+      if(l0List.indexOf(tt.L0)<0) l0List.push(tt.L0);
+      if(zoneList.indexOf(tt.zone)<0) zoneList.push(tt.zone);
+    }
+  }
+
+  var rows=[];
+  var rowsPerTurbine=0;
+  for(var j=0;j<parsed.turbines.length;j++){
+    var t=parsed.turbines[j];
+    var g=computeOctagon(t.x,t.y,D,startAz);
+    var pts=[];
+    if(colCenter) pts.push({name:'中心点',x:t.x,y:t.y,az:''});
+    for(var k=0;k<8;k++){
+      pts.push({name:'P'+(k+1),x:g.pts[k].x,y:g.pts[k].y,az:g.pts[k].az});
+    }
+    for(var m=0;m<pts.length;m++){
+      var r={id:t.id,name:pts[m].name,x:pts[m].x,y:pts[m].y,az:pts[m].az};
+      if(colLL){
+        var ez=extractZone(r.y);
+        var ll=gaussInverse(r.x, ez.y, t.L0);
+        r.lon=ll.lon; r.lat=ll.lat;
+      }
+      rows.push(r);
+    }
+    rowsPerTurbine=pts.length;
+  }
+  state.rows=rows; state.dec=dec; state.D=D; state.startAz=startAz; state.turbines=parsed.turbines;
+  state.L0=l0List[0]||null; state.zone=zoneList[0]||null;
+
+  renderTable(rows,dec);
+  $('cadOut').value=toCAD(parsed.turbines,D,dec,startAz,$('scrComments').checked,$('scrPdmode').checked,colCenter,$('scrText').checked,$('scrTextH').value,$('scrLayer').checked,$('scrLNameNum').value,$('scrLNameMap').value);
+
+  var edge=D*Math.tan(22.5*D2R);              // 边长
+  var area=8*Math.pow(D/2,2)*Math.tan(22.5*D2R); // 面积
+  var stat='共 '+parsed.turbines.length+' 个机位，数据 '+(parsed.turbines.length*rowsPerTurbine)+' 行；内接圆直径 D='+D+' m，外接圆半径 Rc='+((D/2)/Math.cos(22.5*D2R)).toFixed(4)+' m，边长 e='+edge.toFixed(4)+' m，面积 S='+area.toFixed(2)+' m²，P1 起始方位角 α₀='+startAz+'°（自正北顺时针）';
+  if(colLL && l0List.length){
+    stat+='；中央子午线 L0='+l0List.join('/')+'°E'+(zoneList.length?('（'+zoneList.join('/')+' 带）'):'');
+  }
+  $('stats').textContent=stat;
+}
+
+/* ---------- 表格渲染 ---------- */
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function renderTable(rows,dec){
+  var c=outCols();
+  var h='<table><thead><tr><th>序号</th><th>机位编号</th><th>点号</th>';
+  if(c.xy) h+='<th>X坐标</th><th>Y坐标</th><th>方位角(°)</th>';
+  if(c.ll) h+='<th>经度(°)</th><th>纬度(°)</th>';
+  h+='<th class="l">说明</th></tr></thead><tbody>';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i],isC=(r.name==='中心点');
+    h+='<tr class="'+(isC?'center':'')+'"><td>'+(i+1)+'</td><td>'+esc(r.id)+'</td><td>'+r.name+'</td>';
+    if(c.xy) h+='<td>'+r.x.toFixed(dec)+'</td><td>'+r.y.toFixed(dec)+'</td><td>'+(r.az===''?'':r.az)+'</td>';
+    if(c.ll) h+='<td>'+(r.lon!==undefined?r.lon.toFixed(7):'')+'</td><td>'+(r.lat!==undefined?r.lat.toFixed(7):'')+'</td>';
+    h+='<td class="l">'+(isC?'风机中心':'八边形顶点')+'</td></tr>';
+  }
+  h+='</tbody></table>';
+  $('tableWrap').innerHTML=h;
+}
+
+/* ---------- CSV ---------- */
+function csvEsc(v){v=String(v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function toCSV(rows,dec,header){
+  var c=outCols();
+  var L=[];
+  var head=['机位编号','点号'];
+  if(c.xy) head.push('X坐标','Y坐标','方位角(°)');
+  if(c.ll) head.push('经度(°)','纬度(°)');
+  head.push('说明');
+  if(header) L.push(head.join(','));
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i],isC=(r.name==='中心点');
+    var row=[csvEsc(r.id),r.name];
+    if(c.xy) row.push(r.x.toFixed(dec),r.y.toFixed(dec),r.az===''?'':String(r.az));
+    if(c.ll) row.push(r.lon!==undefined?r.lon.toFixed(7):'',r.lat!==undefined?r.lat.toFixed(7):'');
+    row.push(isC?'风机中心':'八边形顶点');
+    L.push(row.join(','));
+  }
+  return '\uFEFF'+L.join('\r\n');
+}
+
+/* ---------- CAD 脚本 ----------
+ * 注意：为兼容各类 CAD（AutoCAD/中望/浩辰等），脚本默认只输出纯命令和坐标，
+ * 不含任何注释和中文（部分 CAD 不支持 ; 注释，中文在 GBK 编码下会乱码成命令报错）。
+ * comments=true 时输出英文注释（部分 CAD 仍可能报未知命令，默认关闭）。
+ */
+function toCAD(turbines,D,dec,startAz,comments,pdmode,centerOut,textNum,textH,layerOn,lNameNum,lNameMap){
+  var L=[];
+  if(comments){
+    L.push('; Wind turbine foundation octagon drawing script (.scr)');
+    L.push('; Coordinate system: CGCS2000, unit: meter');
+    L.push('; NOTE: coordinate order swapped for CAD: output as (Y, X)');
+    L.push('; CAD X = East = survey Y; CAD Y = North = survey X');
+    L.push('; Start azimuth of P1 (clockwise from north): '+startAz+' deg');
+    L.push('; Each turbine: PLINE 8 vertices, C to close'+(centerOut?', POINT center':'')+(textNum?', -TEXT label at center':''));
+  }
+  if(pdmode){
+    L.push('PDMODE');
+    L.push('3');
+    L.push('PDSIZE');
+    L.push('1');
+  }
+  // 字高处理：默认 5，非法值回退 5
+  var h=parseFloat(textH);
+  if(isNaN(h)||h<=0) h=5;
+  var hStr=String(Math.round(h*100)/100);
+  var numName=(layerOn&&lNameNum)?String(lNameNum).trim():'';
+  var mapName=(layerOn&&lNameMap)?String(lNameMap).trim():'';
+
+  // 1) 新建图层并设当前层为征地图层（末尾空行=在 -LAYER 选项提示处回车退出）
+  if(numName||mapName){
+    L.push('-LAYER');
+    L.push('N');
+    L.push(numName&&mapName ? numName+','+mapName : (numName||mapName));
+    if(mapName){
+      L.push('S');
+      L.push(mapName);
+    }
+    L.push('');
+  }
+
+  // 2) 中心点 + 八边形（当前层 = 风机基础征地图层）
+  for(var i=0;i<turbines.length;i++){
+    var t=turbines[i];
+    var g=computeOctagon(t.x,t.y,D,startAz);
+    if(comments) L.push('; --- Turbine '+t.id+' octagon ---');
+    if(centerOut){
+      L.push('POINT');
+      L.push(t.y.toFixed(dec)+','+t.x.toFixed(dec));
+    }
+    L.push('PLINE');
+    for(var k=0;k<8;k++){
+      L.push(g.pts[k].y.toFixed(dec)+','+g.pts[k].x.toFixed(dec));
+    }
+    L.push('C');
+  }
+
+  // 3) 切换到编号图层，绘制所有机位编号
+  if(textNum){
+    if(numName){
+      L.push('-LAYER');
+      L.push('S');
+      L.push(numName);
+      L.push('');
+    }
+    for(var j=0;j<turbines.length;j++){
+      var tj=turbines[j];
+      if(comments) L.push('; --- Turbine '+tj.id+' label ---');
+      // -TEXT（命令行版，不带 "-" 的 TEXT 会弹出在位编辑器导致脚本中断）
+      // 提示顺序：插入点=中心点(交换后Y,X) → 字高 → 旋转角 → 文本=机位编号
+      L.push('-TEXT');
+      L.push(tj.y.toFixed(dec)+','+tj.x.toFixed(dec));
+      L.push(hStr);
+      L.push('0');
+      L.push(tj.id);
+    }
+  }
+  // 末尾补一个回车符：粘贴到 CAD 命令行时最后一行 C 也会被自动回车执行，
+  // 无需用户再手动敲一次回车（对 .scr 文件执行也无影响，不会产生多余空行）
+  return L.join('\r\n')+'\r\n';
+}
+
+/* ---------- 下载 / 复制 ---------- */
+function ts(){
+  var d=new Date(),p=function(n){return String(n).padStart(2,'0');};
+  return ''+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
+}
+function saveBlob(blob,name){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},400);
+}
+function downloadCSV(){
+  if(!state.rows||!state.rows.length){toast('请先点击「计算生成」');return;}
+  saveBlob(new Blob([toCSV(state.rows,state.dec,$('headerCb').checked)],{type:'text/csv;charset=utf-8'}),'风机基础八边形坐标_'+ts()+'.csv');
+}
+function downloadSCR(){
+  if(!state.turbines||!state.turbines.length){toast('请先点击「计算生成」');return;}
+  saveBlob(new Blob([toCAD(state.turbines,state.D,state.dec,state.startAz,$('scrComments').checked,$('scrPdmode').checked,$('outCenter').checked,$('scrText').checked,$('scrTextH').value,$('scrLayer').checked,$('scrLNameNum').value,$('scrLNameMap').value)],{type:'text/plain;charset=utf-8'}),'风机基础八边形绘制_'+ts()+'.scr');
+}
+function copyText(text){
+  if(navigator.clipboard&&window.isSecureContext){
+    return navigator.clipboard.writeText(text);
+  }
+  var ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  var ok=false;
+  try{ok=document.execCommand('copy');}catch(e){ok=false;}
+  document.body.removeChild(ta);
+  return ok?Promise.resolve():Promise.reject(new Error('copy failed'));
+}
+function copyCSV(){
+  if(!state.rows||!state.rows.length){toast('请先点击「计算生成」');return;}
+  copyText(toCSV(state.rows,state.dec,$('headerCb').checked)).then(function(){toast('CSV 已复制');},function(){toast('复制失败，请手动选择复制');});
+}
+function copyCAD(){
+  if(!state.turbines||!state.turbines.length){toast('请先点击「计算生成」');return;}
+  copyText(toCAD(state.turbines,state.D,state.dec,state.startAz,$('scrComments').checked,$('scrPdmode').checked,$('outCenter').checked,$('scrText').checked,$('scrTextH').value,$('scrLayer').checked,$('scrLNameNum').value,$('scrLNameMap').value)).then(function(){toast('CAD 命令已复制');},function(){toast('复制失败，请手动选择复制');});
+}
+
+/* ---------- Tab 切换 ---------- */
+function setTab(k){
+  state.tab=k;
+  $('tabCsv').classList.toggle('active',k==='csv');
+  $('tabCad').classList.toggle('active',k==='cad');
+  $('panelCsv').style.display=k==='csv'?'block':'none';
+  $('panelCad').style.display=k==='cad'?'block':'none';
+}
+
+/* ---------- Toast ---------- */
+var toastTimer=null;
+function toast(msg){
+  var el=$('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},2000);
+}
+
+/* ---------- 事件绑定 ---------- */
+$('btnGen').onclick=generate;
+$('btnDlCsv').onclick=downloadCSV;
+$('btnDlScr').onclick=downloadSCR;
+$('btnCopyCsv').onclick=copyCSV;
+$('btnCopyCad').onclick=copyCAD;
+$('tabCsv').onclick=function(){setTab('csv');};
+$('tabCad').onclick=function(){setTab('cad');};
+$('outXY').addEventListener('change',generate);
+$('outLL').addEventListener('change',generate);
+$('outCenter').addEventListener('change',generate);
+$('merL0').addEventListener('change',generate);
+$('scrComments').addEventListener('change',generate);
+$('scrPdmode').addEventListener('change',generate);
+$('scrText').addEventListener('change',generate);
+$('scrTextH').addEventListener('change',generate);
+$('scrLayer').addEventListener('change',generate);
+$('scrLNameNum').addEventListener('change',generate);
+$('scrLNameMap').addEventListener('change',generate);
+var mers=document.querySelectorAll('input[name="meridian"]');
+for(var mi=0;mi<mers.length;mi++){
+  mers[mi].addEventListener('change',function(){
+    $('merL0').disabled=(document.querySelector('input[name="meridian"]:checked').value!=='manual');
+    generate();
+  });
+}
+$('input').addEventListener('keydown',function(e){
+  if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();generate();}
+});
+$('btnExample').onclick=function(){
+  $('input').value='F1\t4480735\t38397196\nF2\t4477837\t38394755';
+  generate();
+};
+$('btnClear').onclick=function(){
+  $('input').value='';
+  $('errBox').style.display='none';
+  $('stats').textContent='尚未生成数据';
+  $('tableWrap').innerHTML='';
+  $('cadOut').value='';
+  state.rows=null; state.turbines=null;
+};
+
+/* ---------- 初始化：填入示例并生成 ---------- */
+(function init(){
+  $('input').value='F1\t4480735\t38397196\nF2\t4477837\t38394755';
+  generate();
+})();
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  /* 主题切换：仅在独立打开时显示按钮（主框架 iframe 内由主框架统一控制） */
+  if (window.parent !== window) return;
+  var btn = document.createElement("button");
+  btn.className = "theme-toggle";
+  btn.type = "button";
+  function sync(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    btn.textContent = (t === "light") ? "\ud83c\udf19" : "\u2600\ufe0f";
+    btn.title = (t === "light") ? "\u5207\u6362\u5230\u6697\u8272\u4e3b\u9898" : "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898";
+  }
+  btn.addEventListener("click", function(){
+    var t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nbx-theme", t); } catch (e) {}
+    var link = document.getElementById("themeCss");
+    if (link) link.href = "../css/" + t + "/风机基础正八边形征地坐标生成器.css";
+    sync();
+  });
+  sync();
+  document.body.appendChild(btn);
+})();
+</script>
+</body>
+</html>
