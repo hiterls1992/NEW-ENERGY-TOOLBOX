@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="zh-CN" data-page-node-id="srhMM4tOFElorfeAXXBVRG">
+<head data-page-node-id="b4EhfNLn8FOA44rlJgXOsq">
+<meta charset="UTF-8" data-page-node-id="gG5eFeynF6rHOHpaGP6edM">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="yglbgEnApaCHpAK0bmrymK">
 <title>热轧型钢截面特性查询</title>
-<link id="themeCss" rel="stylesheet" href="../css/dark/热轧型钢截面特性查询.css">
+<link id="themeCss" rel="stylesheet" href="../css/dark/热轧型钢截面特性查询.css" data-page-node-id="Yy2J2wY7HX5ciaq056qrvX">
 <script>
 (function(){
   try {
@@ -15,79 +15,79 @@
 })();
 </script>
 </head>
-<body>
-<div class="wrap">
+<body data-page-node-id="NJr7odrfCyYAlx8QeQeVCX">
+<div class="wrap" data-page-node-id="sILlQhjoFBpy6AgcUoBU1u">
 
   <!-- ===== 页头横幅 ===== -->
-  <header>
-    <h1>热轧型钢截面特性查询</h1>
-    <p class="sub">GB/T 706-2016《热轧型钢》+ GB/T 11263-2024《热轧H型钢和剖分T型钢》· 工字钢 / 槽钢 / 角钢 / H型钢 / HK型钢 / 剖分T型钢 · 共 <b id="totalCnt">—</b> 个规格</p>
+  <header data-page-node-id="7Y41AAuNBItZQEggXNSC8Y">
+    <h1 data-page-node-id="rtdxGevQDhqQ0wDdqkzkHz">热轧型钢截面特性查询</h1>
+    <p class="sub" data-page-node-id="9OmRCpXKpeVdpTiNKVDyg0">GB/T 706-2016《热轧型钢》+ GB/T 11263-2024《热轧H型钢和剖分T型钢》· 工字钢 / 槽钢 / 角钢 / H型钢 / HK型钢 / 剖分T型钢 · 共 <b id="totalCnt" data-page-node-id="lA100hy2QSs95Sc2ulRwMm">—</b> 个规格</p>
   </header>
 
   <!-- ===== ① 查询条件 ===== -->
-  <div class="panel">
-    <div class="panel-title">① 查询条件（类别 → 型号 → 规格级联选择）</div>
-    <div class="panel-body">
-      <div class="cond-row">
-        <div class="cond-item">
-          <label for="typeSel">型钢类别</label>
-          <select id="typeSel"></select>
+  <div class="panel" data-page-node-id="U1sAbDqhJQkP0JQ1tcHRTV">
+    <div class="panel-title" data-page-node-id="M5br2v8gLCaqYjWvFhPRPq">① 查询条件（类别 → 型号 → 规格级联选择）</div>
+    <div class="panel-body" data-page-node-id="o8x4EYXUFQYnr79NmR7gyz">
+      <div class="cond-row" data-page-node-id="nbyCVpbZkMRlJryqngXJIF">
+        <div class="cond-item" data-page-node-id="zR2GA3toGCLdAVWcy6smtv">
+          <label for="typeSel" data-page-node-id="CrHZ4yqifyvv3P4Ea3BVrV">型钢类别</label>
+          <select id="typeSel" data-page-node-id="zgvs3zRRxKTwOnOwfGFt0g"></select>
         </div>
-        <div class="cond-item">
-          <label for="modelSel">型号</label>
-          <select id="modelSel"><option value="">— 请选择型号 —</option></select>
+        <div class="cond-item" data-page-node-id="FTVki0R9KKHgB5SsMCAK01">
+          <label for="modelSel" data-page-node-id="hFf3GJLZz6rn4u12oIxVCB">型号</label>
+          <select id="modelSel" data-page-node-id="FV2xcINufEWVqCADrxDKlB"><option value="" data-page-node-id="AvmQUVYc8hq4KRrFQzQ1M0">— 请选择型号 —</option></select>
         </div>
-        <div class="cond-item hidden" id="specItem">
-          <label for="specSel">截面规格（同一型号不同厚度）</label>
-          <select id="specSel"></select>
+        <div class="cond-item hidden" id="specItem" data-page-node-id="qNDfo8de4RIOHGKFwuTsjX">
+          <label for="specSel" data-page-node-id="KrdiQnjQX1VwNEhH2oNUvS">截面规格（同一型号不同厚度）</label>
+          <select id="specSel" data-page-node-id="27ei4gKyn9cKB4eHxVAeWW"></select>
         </div>
       </div>
-      <div class="search-row">
-        <input type="text" id="searchBox" placeholder="输入型号关键字（如 200、L63x6、H400），点击搜索过滤下方全部数据" spellcheck="false">
-        <button class="btn btn-primary" id="btnSearch">搜索</button>
-        <button class="btn btn-ghost" id="btnReset">清除筛选</button>
+      <div class="search-row" data-page-node-id="OYUbTy2DcBsOwYqAB1zzQM">
+        <input type="text" id="searchBox" placeholder="输入型号关键字（如 200、L63x6、H400），点击搜索过滤下方全部数据" spellcheck="false" data-page-node-id="SDBdFJRRFVJBB0ENEzNkeu">
+        <button class="btn btn-primary" id="btnSearch" data-page-node-id="95aNrazleoPEB9FsytWeFc">搜索</button>
+        <button class="btn btn-ghost" id="btnReset" data-page-node-id="wCs1iERcXTMYCzzyhZpeNa">清除筛选</button>
       </div>
-      <div class="msg" id="condMsg"></div>
+      <div class="msg" id="condMsg" data-page-node-id="hfNHKZglkjBaeRf7Z6gCje"></div>
     </div>
   </div>
 
   <!-- ===== ② 全部数据浏览 ===== -->
-  <div class="panel">
-    <div class="panel-title">② 全部数据浏览 <span class="pt-sub" id="tableCount"></span></div>
-    <div class="panel-body">
-      <div class="table-wrap">
-        <table id="dataTable">
-          <thead><tr id="tableHead"></tr></thead>
-          <tbody id="tableBody"></tbody>
+  <div class="panel" data-page-node-id="4YLqLwe5y6YjPHCau01UND">
+    <div class="panel-title" data-page-node-id="RIzXMxFUYDTtL7m2P9ilBk">② 全部数据浏览 <span class="pt-sub" id="tableCount" data-page-node-id="EBS4bpE1ikAMVX2bW4yx2y"></span></div>
+    <div class="panel-body" data-page-node-id="SScgTmdaJT1GDyFg4URQrK">
+      <div class="table-wrap" data-page-node-id="eAAecThLZYdZkWhXGxnCEP">
+        <table id="dataTable" data-page-node-id="jGxGBoOAlQ0y5BOSco8epc">
+          <thead data-page-node-id="qxiyr9B8PMqOE4sNpN1Z0p"><tr id="tableHead" data-page-node-id="gCbGmt2htG8H08qfcu9N7g"></tr></thead>
+          <tbody id="tableBody" data-page-node-id="CYkMjuvGBVGmIikM9m3Wbj"></tbody>
         </table>
       </div>
     </div>
   </div>
 
   <!-- ===== ③ 查询结果 ===== -->
-  <div class="panel" id="resultPanel">
-    <div class="panel-title">③ 查询结果 <span class="pt-sub" id="resultTitle">—</span></div>
-    <div class="panel-body" id="resultBody">
-      <div class="msg" id="emptyMsg">请在上方选择型号，或点击数据表中的行查看截面特性。</div>
-      <div id="resultBlocks" class="hidden"></div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="btnCopy">复制查询结果</button>
+  <div class="panel" id="resultPanel" data-page-node-id="0mg5JYzVCDbKVgDNw4xn9q">
+    <div class="panel-title" data-page-node-id="tJzKBbS7ouwBdnZi6LS9ZP">③ 查询结果 <span class="pt-sub" id="resultTitle" data-page-node-id="VkMO3rtWkCtVKF40J64quv">—</span></div>
+    <div class="panel-body" id="resultBody" data-page-node-id="4TUY1bIymSdzs09Uuq21QX">
+      <div class="msg" id="emptyMsg" data-page-node-id="Ma95JMPAKjV28viaaFgKZ9">请在上方选择型号，或点击数据表中的行查看截面特性。</div>
+      <div id="resultBlocks" class="hidden" data-page-node-id="MugUWAJZrmr9oUJQet8bfW"></div>
+      <div class="btn-row" data-page-node-id="NjAeljkWj20MrdzmKZYn7q">
+        <button class="btn btn-primary" id="btnCopy" data-page-node-id="ETHSl71L13zYzYGS7iLAgM">复制查询结果</button>
       </div>
-      <div class="msg" id="copyMsg"></div>
+      <div class="msg" id="copyMsg" data-page-node-id="UUei8EdlnZacZ9iWg5fHOQ"></div>
     </div>
   </div>
 
   <!-- ===== 说明 ===== -->
-  <div class="panel">
-    <div class="panel-title">数据说明</div>
-    <div class="panel-body">
-      <div class="tip" style="margin-top:0;">
-        <b>说明：</b>本工具收录 7 类热轧型钢的截面尺寸与截面特性（A 截面面积、I 惯性矩、i 回转半径、W 截面模量、外表面积、重心距离等），数据取自标准表列全文，未做任何改写与插值。<br>
-        <b>标准依据：</b>工字钢、槽钢、等边角钢、不等边角钢 — GB/T 706-2016《热轧型钢》；H型钢（附录A）、HK型钢（附录B）、剖分T型钢（附录C）— GB/T 11263-2024《热轧H型钢和剖分T型钢》。<br>
-        <b>基准规格：</b>H型钢 / HK型钢 / 剖分T型钢 中标注"是"的为标准推荐基准规格（表中原"△"标记）。<br>
-        <b>外表面积：</b>单位长度表面积（m²/m），用于涂装、防火层等工程量估算。<br>
-        <b>缺失值：</b>表中"—"表示标准未给出该值。<br>
-        <b>数据来源：</b>本地数据文件 data/热轧型钢截面特性-data.js（由 data/ 下 7 个标准数据 CSV 生成）。
+  <div class="panel" data-page-node-id="XDMUDxc3F0VscrynADL5aJ">
+    <div class="panel-title" data-page-node-id="RGhPA4GliykyqXMPiJOOK6">数据说明</div>
+    <div class="panel-body" data-page-node-id="ISwaR66ClZymNzH0CkWDT1">
+      <div class="tip" style="margin-top:0;" data-page-node-id="3KMekJ4MvB1Mj3F90dTX2Q">
+        <b data-page-node-id="uHGeYjRm7VS9q0v9I55D4h">说明：</b>本工具收录 7 类热轧型钢的截面尺寸与截面特性（A 截面面积、I 惯性矩、i 回转半径、W 截面模量、外表面积、重心距离等），数据取自标准表列全文，未做任何改写与插值。<br data-page-node-id="cORiZNa8hyVzTxA38ZjNqQ">
+        <b data-page-node-id="BeWAQv3ToGDyGz5ICGcZZ0">标准依据：</b>工字钢、槽钢、等边角钢、不等边角钢 — GB/T 706-2016《热轧型钢》；H型钢（附录A）、HK型钢（附录B）、剖分T型钢（附录C）— GB/T 11263-2024《热轧H型钢和剖分T型钢》。<br data-page-node-id="eiYv3EBPQLw8709NbN8S8A">
+        <b data-page-node-id="0bnGoQH3JaiK6uiYTLHF9E">基准规格：</b>H型钢 / HK型钢 / 剖分T型钢 中标注"是"的为标准推荐基准规格（表中原"△"标记）。<br data-page-node-id="FWUZLmypOEP0Z9MY8jRqNL">
+        <b data-page-node-id="sAPqdzgmyGokSk31Bjvb5w">外表面积：</b>单位长度表面积（m²/m），用于涂装、防火层等工程量估算。<br data-page-node-id="QemrMIbvCT7VxHmEkHO2nR">
+        <b data-page-node-id="JQfbD9fATcDK0t81GVAp3a">缺失值：</b>表中"—"表示标准未给出该值。<br data-page-node-id="aP3iZWM3JJkWhAAvA5e2DE">
+        <b data-page-node-id="SMMBBToR31NWfyhtSUNMWf">数据来源：</b>本地数据文件 data/热轧型钢截面特性-data.js（由 data/ 下 7 个标准数据 CSV 生成）。
       </div>
     </div>
   </div>
