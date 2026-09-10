@@ -1,0 +1,17 @@
+# ===== 工具箱项目 .gitignore =====
+
+# WorkBuddy 项目数据（本地助手数据，不入库）
+.workbuddy/
+
+# 本地备份压缩包
+*.zip
+
+# IDE / 助手本地设置
+.codebuddy/settings.local.json
+.idea/
+.vscode/
+*.code-workspace
+
+# 系统杂项
+Thumbs.db
+Desktop.ini
