@@ -236,6 +236,8 @@
 // ==================== CGCS2000 椭球参数 ====================
 const A=6378137.0, F=1/298.257222101;
 const E2=F*(2-F), EP2=E2/(1-E2);
+// 高斯-克吕格投影标准假东（东偏）值：无论是否带带号，东坐标均以 500000m 为起算原点
+const FALSE_EASTING=500000;
 
 // 子午线弧长 M(B)
 function meridianArc(B){
@@ -327,23 +329,89 @@ function identifyCoords(v1,v2){
     return {E:v2,N:v1,firstIsE:false};
   return {E:null,N:null,error:'无法识别坐标方向，请检查输入值'};
 }
+// 东坐标拆分（反算输入端）：由输入东坐标反推 带号 / 中央子午线 / 距中央子午线的真实横坐标 y(m)
+//   带带号  ：E = zone×1000000 + 500000 + y  →  y = E - zone×1000000 - 500000
+//   不带带号：E = 500000 + y                 →  y = E - 500000
 function extractZone(E){
   const sign=E<0?-1:1;
   const a=Math.abs(E);
   if(a>=10000000){
     const zone=Math.floor(a/1000000);
-    return {hasZone:true,zone:zone,L0:zone*3,y:sign*(a-zone*1000000-500000)};
+    return {hasZone:true,zone:zone,L0:zone*3,y:sign*(a-zone*1000000-FALSE_EASTING)};
   }
-  return {hasZone:false,zone:0,L0:null,y:sign*(a-500000)};
+  return {hasZone:false,zone:0,L0:null,y:sign*(a-FALSE_EASTING)};
+}
+// 东坐标组装（正算输出端）：与 extractZone 严格互逆，保证正反算闭合
+//   带带号  ：E = zone×1000000 + 500000 + y  （如38带中央子午线：38×1000000+500000=38500000m）
+//   不带带号：E = 500000 + y                 （恒保留 500000m 假东，不得直接输出 y）
+function composeEasting(zone,y,zoned){
+  return zoned?(zone*1000000+FALSE_EASTING+y):(FALSE_EASTING+y);
 }
 
 // ==================== 自动选带(经纬度→平面) ====================
+// CGCS2000 3°分带：带号 zone = floor((经度 + 1.5) / 3)，中央子午线 L0 = zone × 3
+//   3°带以中央子午线为界，带宽范围 [zone×3-1.5°, zone×3+1.5°)，落在界上的点归入较大带号
+//   校验：112.6°→38带(114°)、114.0°→38带、115.4°→38带、115.6°→39带(117°)、117.0°→39带、120.0°→40带
 function autoZone(lon){
-  // 3度带带号 = round((lon+1.5)/3)
-  let zone=Math.round((lon+1.5)/3);
+  let zone=Math.floor((lon+1.5)/3);
   if(zone<1) zone=1;
   return {zone:zone, L0:zone*3};
 }
+
+// ==================== 数值自检 ====================
+// 运行方式：浏览器打开本工具后按 F12，在控制台执行 nbxSelfTest()
+// 本函数仅依赖纯数学，不读写任何页面元素，可在页面加载完成后随时调用
+function nbxSelfTest(){
+  const out={zone:[],easting:[],closure:[]};
+
+  // 1) 3°分带判定（中央子午线 = 带号×3）
+  [112.6,114.0,115.4,115.6,117.0,120.0,112.5,115.5].forEach(lon=>{
+    const z=autoZone(lon);
+    out.zone.push({经度:lon, '3度带':z.zone, 中央子午线:z.L0});
+  });
+
+  // 2) 假东验证：位于中央子午线上的点，不带带号E应为500000，带带号E应为 zone×1000000+500000
+  [[114,40],[117,40],[120,40]].forEach(function(p){
+    const lon=p[0], lat=p[1];
+    const z=autoZone(lon);
+    const r=gaussForward(lat,lon,z.L0);
+    out.easting.push({
+      经度:lon, 带号:z.zone, 中央子午线:z.L0,
+      不带带号E:composeEasting(z.zone,r.y,false).toFixed(3),
+      带带号E:composeEasting(z.zone,r.y,true).toFixed(3),
+      北坐标N:r.x.toFixed(3)
+    });
+  });
+
+  // 3) 正算→反算闭合（带带号 / 不带带号两种输出均验证）
+  //    注：不带带号平面坐标本身不含带号，反算时中央子午线须由外部给出（页面中即"手动指定带号"），
+  //        此处统一取该点所属3°带的中央子午线，用于验证假东与反算的互逆性
+  [[112.788055,40.454824],[114.0,40.0],[117.0,31.2],[120.5,30.25],[103.85,36.05],[87.6,43.8],[126.6,45.75]]
+  .forEach(function(p){
+    const lon=p[0], lat=p[1];
+    const z=autoZone(lon);
+    const f=gaussForward(lat,lon,z.L0);
+    [true,false].forEach(function(zoned){
+      const E=composeEasting(z.zone,f.y,zoned);
+      const sp=extractZone(E);
+      const L0in=zoned?sp.L0:z.L0;   // 带带号由前缀反推；不带带号取外部给定的中央子午线
+      const b=gaussInverse(f.x,sp.y,L0in);
+      out.closure.push({
+        原始经度:lon, 原始纬度:lat, 输出模式:zoned?'带带号':'不带带号',
+        中央子午线:L0in,
+        计算E:E.toFixed(3), 计算N:f.x.toFixed(3),
+        反算经度:Number(b.lon.toFixed(10)), 反算纬度:Number(b.lat.toFixed(10)),
+        经度误差:b.lon-lon, 纬度误差:b.lat-lat
+      });
+    });
+  });
+
+  console.log('—— 3°分带判定 ——'); console.table(out.zone);
+  console.log('—— 中央子午线假东验证 ——'); console.table(out.easting);
+  console.log('—— 正算→反算闭合 ——'); console.table(out.closure);
+  return out;
+}
+window.nbxSelfTest=nbxSelfTest;
 
 // ==================== UI 交互 ====================
 function switchTab(t){
@@ -464,7 +532,8 @@ function convertSingle(){
     manualDesc=L0===Math.round(L0/3)*3?'（手动指定带号'+(L0/3)+'带）':'（手动指定经度）';
   }
 
-  const yOff=zone.hasZone?zone.y:(id.E-500000);
+  // 距中央子午线横坐标 y：带带号与不带带号统一由 extractZone 扣除 500000m 假东后得到
+  const yOff=zone.y;
   const r=gaussInverse(id.N, yOff, L0);
   const lonDMS=dec2dms(r.lon), latDMS=dec2dms(r.lat);
 
@@ -514,7 +583,8 @@ function convertSingleReverse(){
 
   const r=gaussForward(lat,lon,L0);
   const zoned=document.getElementById('xy-zoned').checked;
-  const E_out=zoned?(zone*1000000+r.y+500000):r.y;
+  // 输出东坐标：不带带号时同样保留 500000m 假东（E = 500000 + y）
+  const E_out=composeEasting(zone,r.y,zoned);
   const N_out=r.x;
 
   let info=`中央子午线 ${L0}°E`;
@@ -570,7 +640,8 @@ function convertBatch(){
       if(merMode==='manual'){L0=manualL0;}
       else if(zone.hasZone){L0=zone.L0;zones.add(zone.zone);}
       else{batchResults.push({i:i+1,v1:v1,v2:v2,err:'不带带号需手动指定中央子午线'});fail++;return;}
-      const yOff=zone.hasZone?zone.y:(id.E-500000);
+      // 距中央子午线横坐标 y：带带号与不带带号统一扣除 500000m 假东
+      const yOff=zone.y;
       const res=gaussInverse(id.N,yOff,L0);
       batchResults.push({i:i+1,v1:v1,v2:v2,lon:res.lon,lat:res.lat,zone:zone.zone,L0:L0,firstIsE:id.firstIsE});
       ok++;
@@ -601,7 +672,8 @@ function convertBatch(){
       else if(merMode==='zone'){L0=manualZone*3;zone=manualZone;}
       else{const az=autoZone(lon);zone=az.zone;L0=az.L0;}
       const res=gaussForward(lat,lon,L0);
-      const E_out=zoned?(zone*1000000+res.y+500000):res.y;
+      // 输出东坐标：不带带号时同样保留 500000m 假东（E = 500000 + y）
+      const E_out=composeEasting(zone,res.y,zoned);
       batchResults.push({i:i+1,lon:lon,lat:lat,E:E_out,N:res.x,zone:zone,L0:L0});
       ok++;
     });
@@ -618,16 +690,17 @@ function renderBatchTable(dir){
   if(!batchResults.length){wrap.innerHTML='';return;}
   let html='<table><thead><tr><th>#</th>';
   let cols=[];
+  // 表头对齐须与数据格一致：右侧对齐的数字列（td.num）表头同样加 num，否则表头贴左、数字贴右造成错位
   if(dir==='to-ll'){
     const c=getOutputCols('b');
-    html+='<th>输入值1</th><th>输入值2</th>';
-    if(c.lonDec){html+='<th>经度(°)</th>';cols.push('lonDec');}
-    if(c.latDec){html+='<th>纬度(°)</th>';cols.push('latDec');}
+    html+='<th class="num">输入值1</th><th class="num">输入值2</th>';
+    if(c.lonDec){html+='<th class="num">经度(°)</th>';cols.push('lonDec');}
+    if(c.latDec){html+='<th class="num">纬度(°)</th>';cols.push('latDec');}
     if(c.lonDms){html+='<th>经度(度分秒)</th>';cols.push('lonDms');}
     if(c.latDms){html+='<th>纬度(度分秒)</th>';cols.push('latDms');}
     html+='<th>带号</th><th>中央子午线</th>';
   }else{
-    html+='<th>经度(°)</th><th>纬度(°)</th><th>东坐标(E)</th><th>北坐标(N)</th><th>带号</th><th>中央子午线</th>';
+    html+='<th class="num">经度(°)</th><th class="num">纬度(°)</th><th class="num">东坐标(E)</th><th class="num">北坐标(N)</th><th>带号</th><th>中央子午线</th>';
   }
   html+='<th>状态</th></tr></thead><tbody>';
   batchResults.forEach(r=>{
@@ -781,6 +854,17 @@ function card(label,value){
 // 初始化默认示例值（单点）
 document.getElementById('s-x').value='38397196';
 document.getElementById('s-y').value='4480735';
+// 单点 经纬度→平面坐标：默认填入与上面同一示例点的经纬度，两方向数据可互相校核
+//   十进制 112.788055°E / 40.454824°N  ≡  度分秒 112°47′16.998″E / 40°27′17.3664″N（精确分解，两种格式结果一致）
+//   该点自动选带为 38 带（中央子午线 114°E），输出 东坐标 38397196.023 / 北坐标 4480737.771
+document.getElementById('ll-dec-lon').value='112.788055';
+document.getElementById('ll-dec-lat').value='40.454824';
+document.getElementById('lon-d').value=112;
+document.getElementById('lon-m').value=47;
+document.getElementById('lon-s').value=16.998;
+document.getElementById('lat-d').value=40;
+document.getElementById('lat-m').value=27;
+document.getElementById('lat-s').value=17.3664;
 
 // 勾选框变化时自动刷新已显示的结果
 ['s-out-lon-dec','s-out-lat-dec','s-out-lon-dms','s-out-lat-dms'].forEach(id=>{

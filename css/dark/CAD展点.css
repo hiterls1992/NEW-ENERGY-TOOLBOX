@@ -229,7 +229,9 @@ th:first-child { border-top-left-radius: var(--r-md); }
 th:last-child { border-top-right-radius: var(--r-md); }
 tr:nth-child(even) td { background: rgba(56,189,248,.04); }
 tr:hover td { background: rgba(34,211,238,.08); }
-.num { text-align: right; font-family: Consolas, monospace; color: #7dd3fc; }
+/* 数字列：数据格右对齐 + 等宽字体；表头仅跟随右对齐，不套用数据格的字体与配色 */
+td.num { text-align: right; font-family: Consolas, monospace; color: #7dd3fc; }
+th.num { text-align: right; }
 
 /* ===== 提示信息（统一 8px 圆角） ===== */
 .msg { padding: 8px 12px; border-radius: var(--r-md); margin-bottom: 10px; font-size: 13px; line-height: 1.7; }
