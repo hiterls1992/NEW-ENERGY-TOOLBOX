@@ -1,0 +1,4 @@
+# GitHub Release 源码包（Source code zip/tar.gz）排除项
+# 原始 CSV 与生成脚本不进入发布包（生成的 .js 数据文件保留，工具离线可用）
+data/*.csv export-ignore
+data/gen_*.py export-ignore
